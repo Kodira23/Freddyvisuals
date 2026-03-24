@@ -29,7 +29,7 @@
 .hero__card {
   position: relative;
   z-index: 3;
-  background: #fff;
+  background: var(--gold, #c9a96e);
   width: clamp(320px, 42vw, 580px);
   margin: auto 0 calc(8vh + 20px) 5vw;
   padding: calc(clamp(3rem, 5vw, 5.5rem) + 20px) calc(clamp(2.5rem, 4vw, 5rem) + 20px);
@@ -45,7 +45,7 @@
   font-weight: 400;
   letter-spacing: 0.35em;
   text-transform: uppercase;
-  color: #888;
+  color: rgba(0,0,0,0.6);
   margin-bottom: clamp(1rem, 2.5vw, 2rem);
 }
 
@@ -62,7 +62,7 @@
 .hero__card-divider {
   width: 48px;
   height: 1px;
-  background: #0a0a0a;
+  background: rgba(0,0,0,0.35);
   margin-bottom: clamp(1rem, 2vw, 1.75rem);
 }
 
@@ -70,7 +70,7 @@
   font-size: 0.68rem;
   letter-spacing: 0.22em;
   text-transform: uppercase;
-  color: #999;
+  color: rgba(0,0,0,0.55);
   margin-bottom: clamp(1.5rem, 3vw, 2.5rem);
 }
 
@@ -80,22 +80,22 @@
   flex-wrap: wrap;
 }
 
-/* Dark/light button variants for the white card */
+/* Gold button with black border for hero card */
 .btn-dark {
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
   padding: 0.75rem 1.75rem;
-  background: #0a0a0a;
-  color: #fff;
+  background: var(--gold, #c9a96e);
+  color: #0a0a0a;
   font-size: 0.68rem;
   letter-spacing: 0.15em;
   text-transform: uppercase;
   text-decoration: none;
-  border: 1px solid #0a0a0a;
+  border: 1.5px solid #0a0a0a;
   transition: background 0.25s, color 0.25s;
 }
-.btn-dark:hover { background: #222; }
+.btn-dark:hover { background: #0a0a0a; color: var(--gold, #c9a96e); }
 
 .btn-outline-dark {
   display: inline-flex;
@@ -422,9 +422,9 @@
   .hero__photo-wrap {
     position: relative;
     left: 0;
-    height: 70vw;
-    min-height: 320px;
-    max-height: 520px;
+    height: 90vw;
+    min-height: 400px;
+    max-height: 650px;
     flex-shrink: 0;
   }
   .hero__bg {
@@ -447,9 +447,9 @@
   .hero__card-divider { background: rgba(0,0,0,0.3); }
   .hero__card-sub { color: rgba(0,0,0,0.55); }
   .hero__card .btn-dark {
-    background: #0a0a0a;
-    color: #fff;
-    border-color: #0a0a0a;
+    background: var(--gold, #c9a96e);
+    color: #0a0a0a;
+    border: 1.5px solid #0a0a0a;
     padding: 0.85rem 2.5rem;
   }
   .hero__card-actions {

@@ -82,8 +82,7 @@ export default function Home() {
           <div className="hero__card-divider" />
           <p className="hero__card-sub">Nairobi, Kenya</p>
           <div className="hero__card-actions">
-            <Link to="/gallery" className="btn btn-dark">View Work</Link>
-            <Link to="/contact" className="btn btn-outline-dark">Book Now</Link>
+            <Link to="/contact" className="btn btn-dark">Book Now</Link>
           </div>
         </div>
       </section>

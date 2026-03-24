@@ -46,7 +46,7 @@ export default function Contact() {
               <div className="contact-detail__icon"><Phone size={16} /></div>
               <div>
                 <span className="contact-detail__label">Phone / WhatsApp</span>
-                <a href="tel:+254700000000">+254 700 000 000</a>
+                <a href="tel:+254700000000">+254 708422738</a>
               </div>
             </li>
             <li>

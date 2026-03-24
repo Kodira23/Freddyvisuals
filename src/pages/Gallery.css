@@ -1,0 +1,133 @@
+.gallery-page { padding-top: var(--nav-height); }
+.gallery-page__hero {
+  padding: 6rem 2rem 3rem;
+  max-width: 700px;
+}
+.gallery-page__sub {
+  font-size: 0.85rem;
+  color: var(--mid);
+  line-height: 1.8;
+  max-width: 500px;
+}
+.gallery-filters {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin-bottom: 2.5rem;
+}
+.gallery-filter {
+  padding: 0.5rem 1.4rem;
+  font-family: var(--font-body);
+  font-size: 0.65rem;
+  font-weight: 500;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  background: transparent;
+  color: var(--mid);
+  border: 1px solid var(--border);
+  cursor: pointer;
+  transition: 0.3s;
+}
+.gallery-filter:hover { border-color: var(--gold); color: var(--gold); }
+.gallery-filter--active { background: var(--gold); color: var(--black); border-color: var(--gold); }
+.gallery-grid {
+  columns: 3;
+  gap: 0.75rem;
+  margin-bottom: 6rem;
+}
+.gallery-card {
+  break-inside: avoid;
+  margin-bottom: 0.75rem;
+  position: relative;
+  overflow: hidden;
+  cursor: pointer;
+}
+.gallery-card img { width: 100%; display: block; transition: transform 0.5s ease; }
+.gallery-card:hover img { transform: scale(1.04); }
+.gallery-card__info {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, rgba(0,0,0,0.75) 0%, transparent 55%);
+  opacity: 0;
+  transition: opacity 0.4s;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  padding: 1.25rem;
+}
+.gallery-card:hover .gallery-card__info { opacity: 1; }
+.gallery-card__cat {
+  font-size: 0.6rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--gold);
+}
+.gallery-card__title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.3rem;
+  color: var(--white);
+}
+
+/* Lightbox */
+.lightbox {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.93);
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+}
+.lightbox__close {
+  position: absolute;
+  top: 1.5rem;
+  right: 1.5rem;
+  background: none;
+  border: 1px solid var(--border);
+  color: var(--white);
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: 0.3s;
+}
+.lightbox__close:hover { border-color: var(--gold); color: var(--gold); }
+.lightbox__inner { max-width: 900px; width: 100%; }
+.lightbox__inner img { max-height: 80vh; width: 100%; object-fit: contain; }
+.lightbox__meta { padding: 1rem 0 0; }
+.lightbox__cat {
+  font-size: 0.6rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--gold);
+}
+.lightbox__title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.8rem;
+  font-weight: 300;
+  color: var(--white);
+}
+@media (max-width: 768px) {
+  .gallery-grid { columns: 2; }
+}
+@media (max-width: 480px) {
+  .gallery-grid { columns: 1; }
+}
+.gallery-filter__count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  background: var(--border);
+  border-radius: 50%;
+  font-size: 0.55rem;
+  margin-left: 0.4rem;
+  color: var(--mid);
+}
+.gallery-filter--active .gallery-filter__count { background: rgba(0,0,0,0.3); color: var(--black); }
+.gallery-card__zoom { color: var(--gold); flex-shrink: 0; }
+.gallery-card__info { display: flex; align-items: flex-end; justify-content: space-between; }

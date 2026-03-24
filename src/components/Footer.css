@@ -1,0 +1,81 @@
+.footer {
+  background: var(--deep);
+  border-top: 1px solid var(--border);
+  margin-top: auto;
+}
+.footer__top {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr;
+  gap: 4rem;
+  padding: 5rem 2rem 4rem;
+}
+.footer__logo { display: flex; flex-direction: column; line-height: 1; margin-bottom: 1.25rem; }
+.footer__logo-text {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 2rem;
+  font-weight: 300;
+  color: var(--white);
+}
+.footer__logo-sub {
+  font-size: 0.55rem;
+  letter-spacing: 0.35em;
+  text-transform: uppercase;
+  color: var(--gold);
+}
+.footer__tagline {
+  font-size: 0.82rem;
+  color: var(--mid);
+  line-height: 1.7;
+  max-width: 280px;
+  margin-bottom: 1.5rem;
+}
+.footer__socials { display: flex; gap: 1rem; }
+.footer__socials a {
+  width: 36px;
+  height: 36px;
+  border: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--mid);
+  transition: 0.3s;
+}
+.footer__socials a:hover { border-color: var(--gold); color: var(--gold); }
+.footer__links h4,
+.footer__contact h4 {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.1rem;
+  font-weight: 400;
+  color: var(--white);
+  margin-bottom: 1.25rem;
+}
+.footer__links ul,
+.footer__contact ul { list-style: none; display: flex; flex-direction: column; gap: 0.75rem; }
+.footer__links li a {
+  font-size: 0.75rem;
+  letter-spacing: 0.1em;
+  color: var(--mid);
+  transition: color 0.3s;
+}
+.footer__links li a:hover { color: var(--gold); }
+.footer__contact li {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-size: 0.75rem;
+  color: var(--mid);
+}
+.footer__bottom {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.5rem 2rem;
+  border-top: 1px solid var(--border);
+  font-size: 0.7rem;
+  color: var(--muted);
+  letter-spacing: 0.05em;
+}
+@media (max-width: 768px) {
+  .footer__top { grid-template-columns: 1fr; gap: 2rem; padding: 3rem 1.5rem; }
+  .footer__bottom { flex-direction: column; gap: 0.5rem; text-align: center; }
+}

@@ -1,0 +1,167 @@
+/* ─── CSS Variables ──────────────────────────────────────────────────────── */
+:root {
+  --nav-height: 80px;
+}
+
+/* ─── Base navbar ────────────────────────────────────────────────────────── */
+.navbar {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  z-index: 1000;
+  height: var(--nav-height);
+  background: #0a0a0a;
+  transition: background 0.4s ease, box-shadow 0.4s ease;
+}
+
+.navbar--scrolled {
+  background: rgba(10, 10, 10, 0.95);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  box-shadow: 0 1px 0 rgba(201, 169, 110, 0.2);
+}
+
+/* ─── ONE gold accent bar — right edge only ─────────────────────────────── */
+.navbar__accent {
+  position: absolute;
+  top: 0; right: 0;
+  width: 3px;
+  height: 100%;
+  background: #c9a96e;
+  z-index: 2;
+}
+
+/* ─── Inner layout ───────────────────────────────────────────────────────── */
+.navbar__inner {
+  height: 100%;
+  max-width: 1320px;
+  margin: 0 auto;
+  padding: 0 2.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+/* ─── Brand ──────────────────────────────────────────────────────────────── */
+nav.navbar .navbar__brand {
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-size: 1.6rem;
+  font-weight: 300;           /* matches home heading weight */
+  letter-spacing: 0.08em;
+  text-decoration: none;
+  display: flex;
+  align-items: baseline;
+  gap: 0.08em;
+  flex-shrink: 0;
+  transition: opacity 0.3s ease;
+}
+nav.navbar .navbar__brand:hover {
+  opacity: 0.85;
+}
+
+/* "freddie" — white */
+nav.navbar .navbar__brand-freddie {
+  color: #f5f0eb;
+}
+
+/* "visuals" — gold, italic like the home em tags */
+nav.navbar .navbar__brand-visuals {
+  color: #c9a96e;
+  font-style: italic;
+}
+
+/* ─── Desktop links ──────────────────────────────────────────────────────── */
+.navbar__links {
+  display: flex;
+  list-style: none;
+  align-items: center;
+  gap: 2.5rem;
+  margin: 0 0 0 auto;
+  padding: 0;
+}
+.navbar__links li { margin: 0; padding: 0; list-style: none; }
+
+nav.navbar .navbar__link {
+  font-family: 'Cormorant Garamond', Georgia, serif;  /* matches home headings */
+  font-size: 1rem;
+  font-weight: 300;
+  letter-spacing: 0.06em;
+  color: #f5f0eb;
+  text-decoration: none;
+  text-decoration-line: none;
+  position: relative;
+  transition: color 0.3s ease;
+  white-space: nowrap;
+}
+
+nav.navbar .navbar__link::after {
+  content: '';
+  position: absolute;
+  bottom: -5px; left: 0;
+  width: 0;
+  height: 1px;
+  background: #c9a96e;
+  transition: width 0.35s ease;
+}
+
+nav.navbar .navbar__link:hover { color: #c9a96e; text-decoration: none; }
+nav.navbar .navbar__link:hover::after { width: 100%; }
+
+nav.navbar .navbar__link--active { color: #c9a96e; text-decoration: none; }
+nav.navbar .navbar__link--active::after { width: 100%; }
+
+/* ─── Hamburger ──────────────────────────────────────────────────────────── */
+.navbar__hamburger {
+  display: none;
+  background: none;
+  border: none;
+  color: #f5f0eb;
+  cursor: pointer;
+  padding: 0.4rem;
+  line-height: 0;
+  flex-shrink: 0;
+  z-index: 2;
+}
+
+/* ─── Mobile drawer ──────────────────────────────────────────────────────── */
+.navbar__mobile {
+  position: fixed;
+  top: var(--nav-height);
+  left: 0; right: 0;
+  background: rgba(10, 10, 10, 0.98);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+  gap: 0;
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94),
+              padding 0.4s ease;
+  z-index: 999;
+}
+
+.navbar__mobile--open {
+  max-height: 400px;
+  padding: 2rem 1.5rem;
+  gap: 1.75rem;
+}
+
+nav.navbar .navbar__mobile-link {
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-size: 1.2rem;
+  font-weight: 300;
+  letter-spacing: 0.06em;
+  color: rgba(245, 240, 235, 0.65);
+  text-decoration: none;
+  transition: color 0.3s ease;
+}
+nav.navbar .navbar__mobile-link.active { color: #c9a96e; }
+nav.navbar .navbar__mobile-link:hover  { color: #f5f0eb; }
+
+/* ─── Responsive ─────────────────────────────────────────────────────────── */
+@media (max-width: 640px) {
+  .navbar__links     { display: none; }
+  .navbar__hamburger { display: flex; }
+  .navbar__inner     { padding: 0 1.25rem; }
+}

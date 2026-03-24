@@ -1,0 +1,166 @@
+/* ── Gate (access page) ── */
+.album-gate {
+  min-height: 100vh;
+  padding-top: var(--nav-height);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(ellipse at 50% 40%, rgba(201,169,110,0.07) 0%, transparent 65%);
+}
+.album-gate__inner {
+  max-width: 460px;
+  width: 100%;
+  padding: 4rem 2rem;
+  text-align: center;
+}
+.album-gate__brand {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.8rem;
+  font-weight: 300;
+  color: var(--white);
+  margin-bottom: 2rem;
+  letter-spacing: 0.04em;
+}
+.album-gate__brand span { color: var(--gold); }
+.album-gate__icon {
+  width: 70px; height: 70px;
+  border: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: center;
+  color: var(--gold); margin: 0 auto 1.5rem;
+}
+.album-gate__sub {
+  font-size: 0.82rem; color: var(--mid);
+  line-height: 1.85; margin-bottom: 2.5rem;
+}
+.album-gate__form { display: flex; flex-direction: column; gap: 0.9rem; }
+.album-gate__input {
+  width: 100%;
+  padding: 1rem 1.25rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--white);
+  font-family: var(--font-body);
+  font-size: 0.9rem;
+  letter-spacing: 0.25em;
+  text-align: center;
+  outline: none;
+  transition: border-color 0.3s;
+}
+.album-gate__input::placeholder { color: var(--muted); letter-spacing: 0.08em; }
+.album-gate__input:focus { border-color: var(--gold); }
+.album-gate__error { font-size: 0.74rem; color: #e07070; text-align: left; }
+.album-gate__help { margin-top: 2rem; font-size: 0.74rem; color: var(--muted); }
+.album-gate__help a { color: var(--gold); }
+
+/* ── Album view ── */
+.album-page { padding-top: var(--nav-height); min-height: 100vh; }
+.album-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding: 4rem 2rem 2.5rem;
+  flex-wrap: wrap;
+  gap: 1.5rem;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 2.5rem;
+}
+.album-event {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.3rem; font-style: italic;
+  color: var(--gold-light); margin-top: 0.5rem;
+}
+.album-date {
+  font-size: 0.7rem; letter-spacing: 0.15em;
+  text-transform: uppercase; color: var(--mid); margin-top: 0.4rem;
+}
+.album-count {
+  display: flex; align-items: center; gap: 0.45rem;
+  font-size: 0.72rem; color: var(--mid);
+  margin-top: 0.75rem; letter-spacing: 0.05em;
+}
+.album-exit { align-self: flex-start; }
+.album-empty {
+  padding: 8rem 2rem;
+  text-align: center;
+  display: flex; flex-direction: column; align-items: center; gap: 1.25rem;
+  color: var(--mid);
+}
+.album-empty svg { color: var(--gold); }
+.album-empty p { font-size: 0.85rem; max-width: 340px; line-height: 1.8; }
+
+/* ── Masonry grid ── */
+.album-masonry {
+  columns: 4;
+  gap: 0.6rem;
+  padding: 0 2rem 6rem;
+}
+.album-photo {
+  break-inside: avoid;
+  margin-bottom: 0.6rem;
+  position: relative;
+  overflow: hidden;
+  cursor: pointer;
+}
+.album-photo img { width: 100%; display: block; transition: transform 0.45s ease; }
+.album-photo:hover img { transform: scale(1.04); }
+.album-photo__hover {
+  position: absolute; inset: 0;
+  background: rgba(0,0,0,0.55);
+  opacity: 0; transition: opacity 0.3s;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  gap: 0.5rem; color: var(--white);
+  font-size: 0.72rem; padding: 1rem; text-align: center;
+}
+.album-photo:hover .album-photo__hover { opacity: 1; }
+
+/* ── Lightbox ── */
+.album-lightbox {
+  position: fixed; inset: 0; z-index: 300;
+  background: rgba(0,0,0,0.96);
+  display: flex; align-items: center; justify-content: center;
+  padding: 2rem;
+}
+.album-lightbox__close {
+  position: absolute; top: 1.5rem; right: 1.5rem;
+  background: none; border: 1px solid var(--border);
+  color: var(--white); width: 44px; height: 44px;
+  font-size: 1.1rem; cursor: pointer; transition: 0.3s;
+  display: flex; align-items: center; justify-content: center;
+}
+.album-lightbox__close:hover { border-color: var(--gold); color: var(--gold); }
+.album-lightbox__nav {
+  position: absolute;
+  top: 50%; transform: translateY(-50%);
+  background: none; border: 1px solid var(--border);
+  color: var(--white); width: 50px; height: 50px;
+  font-size: 2rem; cursor: pointer; transition: 0.3s;
+  display: flex; align-items: center; justify-content: center;
+  line-height: 1;
+}
+.album-lightbox__nav:hover { border-color: var(--gold); color: var(--gold); }
+.album-lightbox__nav--prev { left: 1.5rem; }
+.album-lightbox__nav--next { right: 1.5rem; }
+.album-lightbox__inner { max-width: 880px; width: 100%; }
+.album-lightbox__inner img { max-height: 78vh; width: 100%; object-fit: contain; display: block; }
+.album-lightbox__meta {
+  display: flex; align-items: center;
+  justify-content: space-between;
+  padding: 1rem 0 0; gap: 1rem;
+}
+.album-lightbox__count {
+  font-size: 0.62rem; letter-spacing: 0.2em;
+  text-transform: uppercase; color: var(--gold);
+  display: block; margin-bottom: 0.25rem;
+}
+.album-lightbox__caption {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.3rem; font-weight: 300; color: var(--white);
+}
+
+@media (max-width: 1024px) { .album-masonry { columns: 3; } }
+@media (max-width: 700px)  { .album-masonry { columns: 2; } }
+@media (max-width: 420px)  { .album-masonry { columns: 1; } }
+@media (max-width: 600px) {
+  .album-lightbox__nav { display: none; }
+}

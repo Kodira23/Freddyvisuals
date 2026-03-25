@@ -26,6 +26,22 @@ async function uploadFile(bucket, file) {
   return supabase.storage.from(bucket).getPublicUrl(path).data.publicUrl;
 }
 
+// ── Inline confirmation dialog ─────────────────────────────────────────
+function ConfirmDialog({ message, onConfirm, onCancel }) {
+  return (
+    <div className="adm-confirm-overlay">
+      <div className="adm-confirm-box">
+        <AlertCircle size={20} className="adm-confirm-icon" />
+        <p>{message}</p>
+        <div className="adm-confirm-btns">
+          <button className="adm-btn-danger" onClick={onConfirm}>Yes, Delete</button>
+          <button className="adm-btn-outline" onClick={onCancel}>Cancel</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ── Drag-and-drop upload zone ──────────────────────────────────────────
 function DropZone({ onFiles, uploading, multiple = true, label = 'Drag & drop photos here, or click to browse' }) {
   const ref = useRef();
@@ -294,6 +310,7 @@ function GalleryTab() {
   const [featured,  setFeatured]  = useState(false);
   const [filter,    setFilter]    = useState('All');
   const [msg,       setMsg]       = useState('');
+  const [confirmDel, setConfirmDel] = useState(null); // holds the item to delete
 
   async function load() {
     setLoading(true);
@@ -327,8 +344,9 @@ function GalleryTab() {
     load();
   }
 
-  async function del(item) {
-    if (!confirm(`Delete "${item.title}"? This cannot be undone.`)) return;
+  async function confirmDelete() {
+    const item = confirmDel;
+    setConfirmDel(null);
     const path = item.image_url.split(`/${BUCKET_GALLERY}/`)[1];
     if (path) await supabase.storage.from(BUCKET_GALLERY).remove([path]);
     await supabase.from('gallery').delete().eq('id', item.id);
@@ -339,6 +357,14 @@ function GalleryTab() {
 
   return (
     <div>
+      {confirmDel && (
+        <ConfirmDialog
+          message={`Delete "${confirmDel.title}"? This cannot be undone.`}
+          onConfirm={confirmDelete}
+          onCancel={() => setConfirmDel(null)}
+        />
+      )}
+
       <div className="adm-notice">
         <AlertCircle size={14}/>
         <span>Photos upload directly to your <strong>Supabase Storage</strong> bucket <code>gallery</code>. Create this bucket in Supabase → Storage before uploading.</span>
@@ -387,7 +413,7 @@ function GalleryTab() {
                   <button onClick={()=>toggleFeatured(row)} title={row.featured?'Unfeature':'Feature'} className={row.featured?'gold':''}>
                     {row.featured ? <Star size={13} fill="currentColor"/> : <StarOff size={13}/>}
                   </button>
-                  <button onClick={()=>del(row)} className="red"><Trash2 size={13}/></button>
+                  <button onClick={()=>setConfirmDel(row)} className="red"><Trash2 size={13}/></button>
                 </div>
               </div>
               {row.featured && <div className="adm-gal-item__badge">Featured</div>}
@@ -413,6 +439,8 @@ function AlbumsTab() {
   const [form,      setForm]      = useState({ client_name:'', event_name:'', event_date:'', access_code:'' });
   const [saving,    setSaving]    = useState(false);
   const [msg,       setMsg]       = useState('');
+  const [confirmDelAlbum, setConfirmDelAlbum] = useState(null);
+  const [confirmDelPhoto, setConfirmDelPhoto] = useState(null); // { pid, gid }
 
   async function load() {
     setLoading(true);
@@ -462,7 +490,9 @@ function AlbumsTab() {
     loadPhotos(gid);
   }
 
-  async function delPhoto(pid, gid) {
+  async function confirmDeletePhoto() {
+    const { pid, gid } = confirmDelPhoto;
+    setConfirmDelPhoto(null);
     const photo = photos[gid]?.find(p=>p.id===pid);
     if (photo) {
       const path = photo.image_url.split(`/${BUCKET_CLIENTS}/`)[1];
@@ -472,8 +502,9 @@ function AlbumsTab() {
     loadPhotos(gid);
   }
 
-  async function delAlbum(id) {
-    if (!confirm('Delete this entire album and all its photos?')) return;
+  async function confirmDeleteAlbum() {
+    const id = confirmDelAlbum;
+    setConfirmDelAlbum(null);
     await supabase.from('client_galleries').delete().eq('id',id);
     load();
   }
@@ -486,6 +517,21 @@ function AlbumsTab() {
 
   return (
     <div>
+      {confirmDelAlbum && (
+        <ConfirmDialog
+          message="Delete this entire album and all its photos? This cannot be undone."
+          onConfirm={confirmDeleteAlbum}
+          onCancel={() => setConfirmDelAlbum(null)}
+        />
+      )}
+      {confirmDelPhoto && (
+        <ConfirmDialog
+          message="Delete this photo? This cannot be undone."
+          onConfirm={confirmDeletePhoto}
+          onCancel={() => setConfirmDelPhoto(null)}
+        />
+      )}
+
       <div className="adm-notice">
         <AlertCircle size={14}/>
         <span>Photos upload to Supabase Storage bucket <code>client-photos</code>. Clients access their album using the code at <strong>/album</strong>.</span>
@@ -539,7 +585,7 @@ function AlbumsTab() {
                   </div>
                 </div>
                 <div className="adm-album-card__actions">
-                  <button className="adm-icon-btn red" onClick={e=>{e.stopPropagation();delAlbum(row.id)}}><Trash2 size={14}/></button>
+                  <button className="adm-icon-btn red" onClick={e=>{e.stopPropagation();setConfirmDelAlbum(row.id)}}><Trash2 size={14}/></button>
                   {expanded===row.id ? <ChevronUp size={18}/> : <ChevronDown size={18}/>}
                 </div>
               </div>
@@ -556,7 +602,7 @@ function AlbumsTab() {
                     {(photos[row.id]||[]).map(p=>(
                       <div key={p.id} className="adm-client-photo">
                         <img src={p.image_url} alt=""/>
-                        <button className="adm-client-photo__del" onClick={()=>delPhoto(p.id,row.id)}><X size={11}/></button>
+                        <button className="adm-client-photo__del" onClick={()=>setConfirmDelPhoto({ pid: p.id, gid: row.id })}><X size={11}/></button>
                       </div>
                     ))}
                     {(photos[row.id]||[]).length===0 && !uploading && (
@@ -587,6 +633,7 @@ function ServicesTab() {
   const [saving,  setSaving]  = useState(false);
   const [msg,     setMsg]     = useState('');
   const [form,    setForm]    = useState({ title:'', description:'', price_from:'', duration:'', image_url:'', features:'' });
+  const [confirmDel, setConfirmDel] = useState(null); // holds id to delete
 
   async function load() {
     setLoading(true);
@@ -619,13 +666,23 @@ function ServicesTab() {
     window.scrollTo({top:0,behavior:'smooth'});
   }
 
-  async function del(id) {
-    if(!confirm('Delete this service?')) return;
-    await supabase.from('services').delete().eq('id',id); load();
+  async function confirmDelete() {
+    const id = confirmDel;
+    setConfirmDel(null);
+    await supabase.from('services').delete().eq('id', id);
+    load();
   }
 
   return (
     <div>
+      {confirmDel && (
+        <ConfirmDialog
+          message="Delete this service package? This cannot be undone."
+          onConfirm={confirmDelete}
+          onCancel={() => setConfirmDel(null)}
+        />
+      )}
+
       <div className="adm-section-actions">
         {!open && (
           <button className="adm-btn-primary" onClick={()=>{ setOpen(true); setEditing(null); setImgFile(null); setImgPrev(''); setForm({title:'',description:'',price_from:'',duration:'',image_url:'',features:''}); }}>
@@ -709,7 +766,7 @@ function ServicesTab() {
                 )}
                 <div className="adm-service-card__actions">
                   <button className="adm-btn-outline adm-btn-sm" onClick={()=>startEdit(row)}><Edit3 size={12}/> Edit</button>
-                  <button className="adm-icon-btn red" onClick={()=>del(row.id)}><Trash2 size={14}/></button>
+                  <button className="adm-icon-btn red" onClick={()=>setConfirmDel(row.id)}><Trash2 size={14}/></button>
                 </div>
               </div>
             </div>
@@ -728,6 +785,7 @@ function InquiriesTab() {
   const [rows,     setRows]    = useState([]);
   const [loading,  setLoading] = useState(true);
   const [expanded, setExpanded]= useState(null);
+  const [confirmDel, setConfirmDel] = useState(null);
 
   async function load() {
     setLoading(true);
@@ -736,13 +794,23 @@ function InquiriesTab() {
   }
   useEffect(()=>{ load(); },[]);
 
-  async function del(id) {
-    if(!confirm('Delete this inquiry?')) return;
-    await supabase.from('inquiries').delete().eq('id',id); load();
+  async function confirmDelete() {
+    const id = confirmDel;
+    setConfirmDel(null);
+    await supabase.from('inquiries').delete().eq('id', id);
+    load();
   }
 
   return (
     <div>
+      {confirmDel && (
+        <ConfirmDialog
+          message="Delete this inquiry? This cannot be undone."
+          onConfirm={confirmDelete}
+          onCancel={() => setConfirmDel(null)}
+        />
+      )}
+
       <p className="adm-muted" style={{marginBottom:'1.5rem'}}>{rows.length} total inquiries from your contact form.</p>
       {loading ? <div className="adm-loading"><Loader size={18} className="spin"/> Loading…</div> : (
         <div className="adm-inquiries">
@@ -756,7 +824,7 @@ function InquiriesTab() {
                 </div>
                 <div className="adm-inquiry__right">
                   <a href={`mailto:${row.email}`} className="adm-btn-outline adm-btn-sm" onClick={e=>e.stopPropagation()}>Reply</a>
-                  <button className="adm-icon-btn red" onClick={e=>{e.stopPropagation();del(row.id)}}><Trash2 size={13}/></button>
+                  <button className="adm-icon-btn red" onClick={e=>{e.stopPropagation();setConfirmDel(row.id)}}><Trash2 size={13}/></button>
                   {expanded===row.id?<ChevronUp size={16}/>:<ChevronDown size={16}/>}
                 </div>
               </div>

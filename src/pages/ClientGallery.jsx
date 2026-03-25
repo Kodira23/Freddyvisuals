@@ -1,13 +1,18 @@
 import { useState, useEffect, useRef } from 'react';
-import { Lock, Download, Eye, LogOut, Image, Play, Volume2, VolumeX, Pause } from 'lucide-react';
+import { Lock, Download, Eye, LogOut, Image, Play, Volume2, VolumeX, AlertCircle } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import './ClientGallery.css';
 
+// Enhanced video URL detection
 function isVideoUrl(url) {
-  return /\.(mp4|mov|avi|webm|mkv|m4v|wmv|flv|3gp)(\?.*)?$/i.test(url || '');
+  if (!url) return false;
+  // Check file extension
+  if (/\.(mp4|mov|avi|webm|mkv|m4v|wmv|flv|3gp)(\?.*)?$/i.test(url)) return true;
+  // Check for common video keywords in URL
+  if (url.includes('video') || url.includes('mp4') || url.includes('mov')) return true;
+  return false;
 }
 
-// fires once when element enters viewport
 function useScrollReveal(options = {}) {
   const ref = useRef(null);
   const [visible, setVisible] = useState(false);
@@ -24,15 +29,17 @@ function useScrollReveal(options = {}) {
   return [ref, visible];
 }
 
-// play when >=50% visible, pause when not
 function useVideoAutoplay(videoRef) {
   useEffect(() => {
     const el = videoRef.current;
     if (!el) return;
     const obs = new IntersectionObserver(
       ([entry]) => {
-        if (entry.isIntersecting) { el.play().catch(() => {}); }
-        else { el.pause(); }
+        if (entry.isIntersecting) {
+          el.play().catch(err => console.warn('Autoplay blocked:', err));
+        } else {
+          el.pause();
+        }
       },
       { threshold: 0.5 }
     );
@@ -46,15 +53,32 @@ function VideoCard({ photo, index, onClick }) {
   const videoRef = useRef(null);
   useVideoAutoplay(videoRef);
   const [muted, setMuted] = useState(true);
-  const [isPlaying, setIsPlaying] = useState(false);
+  const [error, setError] = useState(false);
+  const [manuallyPlaying, setManuallyPlaying] = useState(false);
 
   function setRefs(el) {
     revealRef.current = el;
-    videoRef.current  = el;
+    videoRef.current = el;
   }
 
-  // Use thumbnail if available, otherwise fallback to a default poster
   const posterUrl = photo.thumbnail_url || '/video-poster-placeholder.jpg';
+
+  const handleVideoError = () => {
+    setError(true);
+    console.warn('Video failed to load:', photo.image_url);
+  };
+
+  const handleManualPlay = (e) => {
+    e.stopPropagation();
+    if (videoRef.current) {
+      videoRef.current.play().then(() => {
+        setManuallyPlaying(true);
+        setError(false);
+      }).catch(err => {
+        console.error('Manual play failed:', err);
+      });
+    }
+  };
 
   return (
     <div
@@ -62,18 +86,25 @@ function VideoCard({ photo, index, onClick }) {
       style={{ '--i': index }}
       onClick={() => onClick(photo)}
     >
-      <video
-        ref={setRefs}
-        src={photo.image_url}
-        poster={posterUrl}
-        muted={muted}
-        loop
-        playsInline
-        preload="metadata"
-        style={{ width: '100%', display: 'block' }}
-        onPlay={() => setIsPlaying(true)}
-        onPause={() => setIsPlaying(false)}
-      />
+      {!error ? (
+        <video
+          ref={setRefs}
+          src={photo.image_url}
+          poster={posterUrl}
+          muted={muted}
+          loop
+          playsInline
+          preload="metadata"
+          style={{ width: '100%', display: 'block' }}
+          onError={handleVideoError}
+        />
+      ) : (
+        <div className="client-photo__video-error">
+          <AlertCircle size={24} />
+          <p>Video failed to load</p>
+          <button onClick={handleManualPlay} className="btn btn-sm btn-primary">Retry</button>
+        </div>
+      )}
       <button
         className="client-photo__mute"
         onClick={e => { e.stopPropagation(); setMuted(m => !m); }}
@@ -82,7 +113,7 @@ function VideoCard({ photo, index, onClick }) {
         {muted ? <VolumeX size={13} /> : <Volume2 size={13} />}
       </button>
       <div className="client-photo__overlay client-photo__overlay--video">
-        {!isPlaying && <Play size={22} />}
+        <Play size={22} />
         {photo.caption && <span>{photo.caption}</span>}
       </div>
       <div className="client-photo__vid-badge">

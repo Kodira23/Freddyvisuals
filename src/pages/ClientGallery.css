@@ -164,3 +164,74 @@
   gap: 0.4rem;
   justify-content: center;
 }
+/* Video error message */
+.client-photo__video-error {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0,0,0,0.8);
+  color: white;
+  gap: 0.5rem;
+  text-align: center;
+  z-index: 10;
+}
+.client-photo__video-error button {
+  margin-top: 0.5rem;
+  padding: 0.25rem 0.75rem;
+  font-size: 0.75rem;
+}
+
+/* Ensure video covers its container */
+.client-photo video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  background: #111;
+}
+
+/* Mute button positioning */
+.client-photo__mute {
+  position: absolute;
+  bottom: 0.75rem;
+  right: 0.75rem;
+  z-index: 20;
+  background: rgba(0,0,0,0.7);
+  border: none;
+  border-radius: 50%;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  backdrop-filter: blur(4px);
+  color: white;
+  transition: opacity 0.2s;
+}
+.client-photo__mute:hover {
+  background: rgba(0,0,0,0.9);
+}
+
+/* Video badge */
+.client-photo__vid-badge {
+  position: absolute;
+  bottom: 0.75rem;
+  left: 0.75rem;
+  background: rgba(0,0,0,0.6);
+  backdrop-filter: blur(4px);
+  padding: 0.25rem 0.5rem;
+  border-radius: 20px;
+  font-size: 0.7rem;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  color: white;
+  z-index: 20;
+}

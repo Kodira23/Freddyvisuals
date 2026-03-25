@@ -318,7 +318,7 @@
 .adm-gal-item:hover .adm-gal-item__info { opacity: 1; }
 .adm-gal-item__cat   { font-size: 0.55rem; letter-spacing: 0.15em; text-transform: uppercase; color: var(--gold); }
 .adm-gal-item__title { font-size: 0.78rem; color: var(--white); margin-bottom: 0.4rem; }
-.adm-gal-item__btns  { display: flex; gap: 0.35rem; }
+.adm-gal-item__btns  { display: flex; gap: 0.35rem; align-items: center; flex-wrap: wrap; }
 .adm-gal-item__btns button {
   padding: 0.28rem 0.45rem; background: rgba(0,0,0,0.65);
   border: 1px solid var(--border); color: var(--light);
@@ -411,4 +411,199 @@
   .adm-service-card { flex-direction: column; }
   .adm-service-card__img { width: 100%; height: 150px; }
   .adm-stats-grid { grid-template-columns: 1fr 1fr; }
+}
+
+
+/* ════════════════════════════════════════════
+   NEW: Inline confirm · Editable name · Upload confirm panel
+   ════════════════════════════════════════════ */
+
+/* ── Inline delete confirmation ── */
+.inline-confirm {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  background: rgba(231, 76, 60, 0.08);
+  border: 1px solid rgba(231, 76, 60, 0.3);
+  border-radius: 4px;
+  padding: 0.2rem 0.5rem;
+  font-size: 0.68rem;
+  color: #e07070;
+  white-space: nowrap;
+}
+.inline-confirm span {
+  font-size: 0.65rem;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+}
+.inline-confirm__yes,
+.inline-confirm__no {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+  padding: 0.15rem 0.45rem;
+  border-radius: 3px;
+  font-size: 0.65rem;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  transition: background 0.2s, color 0.2s;
+  font-family: var(--font-body);
+}
+.inline-confirm__yes {
+  background: #e74c3c;
+  color: #fff;
+}
+.inline-confirm__yes:hover { background: #c0392b; }
+.inline-confirm__no {
+  background: rgba(255,255,255,0.06);
+  color: var(--mid);
+  border: 1px solid rgba(255,255,255,0.1);
+}
+.inline-confirm__no:hover { background: rgba(255,255,255,0.13); color: var(--white); }
+
+/* ── Editable image title ── */
+.adm-gal-item__title--editable {
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  transition: color 0.2s;
+  line-height: 1.3;
+}
+.adm-gal-item__title--editable:hover { color: var(--gold); }
+.adm-edit-hint {
+  opacity: 0;
+  transition: opacity 0.2s;
+  flex-shrink: 0;
+  color: var(--gold);
+}
+.adm-gal-item__title--editable:hover .adm-edit-hint { opacity: 1; }
+
+.adm-gal-item__name-edit {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  width: 100%;
+  margin-bottom: 0.4rem;
+}
+.adm-gal-item__name-input {
+  flex: 1;
+  min-width: 0;
+  background: rgba(0,0,0,0.7);
+  border: 1px solid var(--gold);
+  border-radius: 3px;
+  color: var(--white);
+  font-family: var(--font-body);
+  font-size: 0.72rem;
+  padding: 0.3rem 0.5rem;
+  outline: none;
+}
+.adm-gal-item__name-edit button {
+  padding: 0.28rem 0.42rem;
+  border-radius: 3px;
+  border: none;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  transition: background 0.2s;
+  flex-shrink: 0;
+}
+.adm-gal-item__name-edit button.green { background: #27ae60; color: #fff; }
+.adm-gal-item__name-edit button.green:hover { background: #1e8449; }
+.adm-gal-item__name-edit button:not(.green) {
+  background: rgba(255,255,255,0.08);
+  color: var(--mid);
+  border: 1px solid rgba(255,255,255,0.1);
+}
+.adm-gal-item__name-edit button:not(.green):hover { background: rgba(255,255,255,0.16); }
+
+/* ── Pre-upload confirm panel ── */
+.upload-confirm-panel {
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  overflow: hidden;
+  margin-bottom: 1rem;
+  background: rgba(255,255,255,0.02);
+}
+.upload-confirm-panel__header {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.85rem 1rem;
+  background: rgba(201,169,110,0.07);
+  border-bottom: 1px solid var(--border);
+  font-size: 0.78rem;
+  color: var(--gold);
+}
+.upload-confirm-panel__header strong { flex: 1; font-weight: 500; }
+.upload-confirm-panel__header .adm-icon-btn {
+  width: 26px; height: 26px;
+  color: var(--mid);
+}
+.upload-confirm-panel__header .adm-icon-btn:hover { color: var(--white); }
+
+.upload-confirm-panel__list {
+  display: flex;
+  flex-direction: column;
+  max-height: 300px;
+  overflow-y: auto;
+}
+.upload-confirm-item {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  padding: 0.7rem 1rem;
+  border-bottom: 1px solid var(--border);
+}
+.upload-confirm-item:last-child { border-bottom: none; }
+.upload-confirm-item__thumb {
+  width: 50px;
+  height: 50px;
+  object-fit: cover;
+  border-radius: 3px;
+  flex-shrink: 0;
+  border: 1px solid var(--border);
+}
+.upload-confirm-item__info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+.upload-confirm-item__name {
+  background: rgba(255,255,255,0.04);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  color: var(--white);
+  font-family: var(--font-body);
+  font-size: 0.78rem;
+  padding: 0.32rem 0.6rem;
+  outline: none;
+  width: 100%;
+  transition: border-color 0.2s;
+}
+.upload-confirm-item__name:focus { border-color: var(--gold); }
+
+.upload-confirm-panel__footer {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.85rem 1rem;
+  border-top: 1px solid var(--border);
+  background: rgba(0,0,0,0.15);
+}
+
+/* ── Client photo inline delete overlay ── */
+.adm-client-photo__inline-del {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: rgba(0,0,0,0.82);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.35rem;
 }

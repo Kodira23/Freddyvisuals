@@ -55,9 +55,21 @@
   font-size: 0.75rem;
   color: var(--muted);
 }
+.client-access-logo {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 2rem;
+  font-weight: 300;
+  letter-spacing: 0.05em;
+  margin-bottom: 2rem;
+  display: flex;
+  gap: 0.4rem;
+  justify-content: center;
+}
 
-/* Unlocked gallery */
+/* ── Unlocked gallery page ── */
 .client-gallery-page { padding-top: var(--nav-height); }
+
+/* Header: left-aligned on desktop */
 .client-gallery-header {
   display: flex;
   align-items: flex-start;
@@ -66,35 +78,61 @@
   flex-wrap: wrap;
   gap: 1.5rem;
 }
+.client-gallery-header__text {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start; /* left-align everything */
+}
+
+/* Gallery title — no brand prefix, left-aligned */
+.client-gallery-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: clamp(2.2rem, 5vw, 3.5rem);
+  font-weight: 300;
+  color: var(--white);
+  letter-spacing: 0.02em;
+  line-height: 1.1;
+  text-align: left;
+  margin: 0 0 0.5rem;
+}
+
 .client-gallery-event {
   font-family: 'Cormorant Garamond', serif;
   font-size: 1.3rem;
   font-style: italic;
-  color: var(--gold-light);
-  margin-top: 0.5rem;
+  color: var(--gold-light, #d4b07a);
+  margin-top: 0.25rem;
+  text-align: left;
 }
 .client-gallery-date {
   font-size: 0.72rem;
   letter-spacing: 0.15em;
   text-transform: uppercase;
   color: var(--mid);
-  margin-top: 0.5rem;
+  margin-top: 0.4rem;
+  text-align: left;
 }
+.client-gallery-exit { align-self: flex-start; }
+
 .client-gallery-stats {
   padding: 0 2rem 1.5rem;
   display: flex;
   gap: 2rem;
-  font-size: 0.75rem;
+  font-size: 0.72rem;
   color: var(--mid);
   letter-spacing: 0.1em;
 }
 .client-gallery-stats span { display: flex; align-items: center; gap: 0.4rem; }
 .client-gallery-empty { padding: 6rem 2rem; text-align: center; color: var(--mid); }
+
+/* ── Masonry grid ── */
 .client-gallery-grid {
   columns: 4;
   gap: 0.5rem;
   padding: 0 2rem 5rem;
 }
+
+/* ── Photo card ── */
 .client-photo {
   break-inside: avoid;
   margin-bottom: 0.5rem;
@@ -122,11 +160,27 @@
 }
 .client-photo:hover .client-photo__overlay { opacity: 1; }
 
-/* Lightbox reuse */
+/* ── Scroll-from-right reveal — MOBILE ONLY ── */
+@media (max-width: 768px) {
+  .client-photo {
+    /* start: off-screen right, invisible */
+    opacity: 0;
+    transform: translateX(60px);
+    transition:
+      opacity 0.55s ease calc(var(--i, 0) * 0.04s),
+      transform 0.55s cubic-bezier(0.22, 0.61, 0.36, 1) calc(var(--i, 0) * 0.04s);
+  }
+  .client-photo--visible {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* ── Lightbox ── */
 .lightbox {
   position: fixed;
   inset: 0;
-  background: rgba(0,0,0,0.93);
+  background: rgba(0,0,0,0.95);
   z-index: 200;
   display: flex;
   align-items: center;
@@ -145,22 +199,60 @@
   cursor: pointer;
   font-size: 1rem;
   transition: 0.3s;
-}
-.lightbox__close:hover { border-color: var(--gold); color: var(--gold); }
-.lightbox__inner { max-width: 900px; width: 100%; }
-.lightbox__inner img { max-height: 80vh; width: 100%; object-fit: contain; }
-.lightbox__meta { padding: 1rem 0 0; }
-
-@media (max-width: 900px) { .client-gallery-grid { columns: 3; } }
-@media (max-width: 600px) { .client-gallery-grid { columns: 2; } }
-@media (max-width: 400px) { .client-gallery-grid { columns: 1; } }
-.client-access-logo {
-  font-family: 'Cormorant Garamond', serif;
-  font-size: 2rem;
-  font-weight: 300;
-  letter-spacing: 0.05em;
-  margin-bottom: 2rem;
   display: flex;
-  gap: 0.4rem;
+  align-items: center;
   justify-content: center;
 }
+.lightbox__close:hover { border-color: var(--gold); color: var(--gold); }
+.lightbox__nav {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: 1px solid var(--border);
+  color: var(--white);
+  width: 50px;
+  height: 50px;
+  font-size: 2rem;
+  cursor: pointer;
+  transition: 0.3s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+}
+.lightbox__nav:hover { border-color: var(--gold); color: var(--gold); }
+.lightbox__nav--prev { left: 1.5rem; }
+.lightbox__nav--next { right: 1.5rem; }
+.lightbox__inner { max-width: 900px; width: 100%; }
+.lightbox__inner img { max-height: 80vh; width: 100%; object-fit: contain; display: block; }
+.lightbox__meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 0 0;
+  gap: 1rem;
+}
+.lightbox__counter {
+  display: block;
+  font-size: 0.62rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin-bottom: 0.25rem;
+}
+.lightbox__caption {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.3rem;
+  font-weight: 300;
+  color: var(--white);
+}
+
+/* ── Responsive ── */
+@media (max-width: 1024px) { .client-gallery-grid { columns: 3; } }
+@media (max-width: 768px)  {
+  .client-gallery-grid { columns: 2; }
+  .client-gallery-title { font-size: 2rem; }
+  .lightbox__nav { display: none; }
+}
+@media (max-width: 420px)  { .client-gallery-grid { columns: 1; } }

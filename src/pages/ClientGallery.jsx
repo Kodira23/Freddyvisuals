@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Lock, Download, Eye, LogOut, Image, Play, Volume2, VolumeX } from 'lucide-react';
+import { Lock, Download, Eye, LogOut, Image, Play, Volume2, VolumeX, Pause } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import './ClientGallery.css';
 
@@ -46,11 +46,15 @@ function VideoCard({ photo, index, onClick }) {
   const videoRef = useRef(null);
   useVideoAutoplay(videoRef);
   const [muted, setMuted] = useState(true);
+  const [isPlaying, setIsPlaying] = useState(false);
 
   function setRefs(el) {
     revealRef.current = el;
     videoRef.current  = el;
   }
+
+  // Use thumbnail if available, otherwise fallback to a default poster
+  const posterUrl = photo.thumbnail_url || '/video-poster-placeholder.jpg';
 
   return (
     <div
@@ -61,11 +65,14 @@ function VideoCard({ photo, index, onClick }) {
       <video
         ref={setRefs}
         src={photo.image_url}
+        poster={posterUrl}
         muted={muted}
         loop
         playsInline
         preload="metadata"
         style={{ width: '100%', display: 'block' }}
+        onPlay={() => setIsPlaying(true)}
+        onPause={() => setIsPlaying(false)}
       />
       <button
         className="client-photo__mute"
@@ -75,7 +82,7 @@ function VideoCard({ photo, index, onClick }) {
         {muted ? <VolumeX size={13} /> : <Volume2 size={13} />}
       </button>
       <div className="client-photo__overlay client-photo__overlay--video">
-        <Play size={22} />
+        {!isPlaying && <Play size={22} />}
         {photo.caption && <span>{photo.caption}</span>}
       </div>
       <div className="client-photo__vid-badge">
@@ -103,7 +110,7 @@ function ImageCard({ photo, index, onClick }) {
   );
 }
 
-function LightboxVideo({ src }) {
+function LightboxVideo({ src, poster }) {
   const ref = useRef(null);
   useEffect(() => { ref.current?.play().catch(() => {}); }, [src]);
   return (
@@ -113,6 +120,7 @@ function LightboxVideo({ src }) {
       controls
       autoPlay
       playsInline
+      poster={poster}
       style={{ maxHeight: '78vh', width: '100%', objectFit: 'contain', display: 'block' }}
     />
   );
@@ -209,7 +217,7 @@ export default function ClientGallery() {
           <div className="lightbox" onClick={() => setLightbox(null)}>
             <div className="lightbox__inner" onClick={e => e.stopPropagation()}>
               {isVideoUrl(lightbox.image_url)
-                ? <LightboxVideo src={lightbox.image_url} />
+                ? <LightboxVideo src={lightbox.image_url} poster={lightbox.thumbnail_url || '/video-poster-placeholder.jpg'} />
                 : <img src={lightbox.image_url} alt={lightbox.caption || ''} />
               }
               <div className="lightbox__meta">

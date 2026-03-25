@@ -1,15 +1,54 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Lock, Download, Eye, LogOut, Image } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import './ClientGallery.css';
 
+// Hook: fires when element enters viewport
+function useScrollReveal(options = {}) {
+  const ref = useRef(null);
+  const [visible, setVisible] = useState(false);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const obs = new IntersectionObserver(
+      ([entry]) => { if (entry.isIntersecting) { setVisible(true); obs.disconnect(); } },
+      { threshold: 0.12, ...options }
+    );
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, []);
+
+  return [ref, visible];
+}
+
+// Individual photo with scroll-from-right reveal (mobile only via CSS)
+function Photo({ photo, index, onClick }) {
+  const [ref, visible] = useScrollReveal();
+  return (
+    <div
+      ref={ref}
+      className={`client-photo${visible ? ' client-photo--visible' : ''}`}
+      style={{ '--i': index }}
+      onClick={() => onClick(photo)}
+    >
+      <img src={photo.image_url} alt={photo.caption || ''} loading="lazy" />
+      <div className="client-photo__overlay">
+        <Eye size={20} />
+        {photo.caption && <span>{photo.caption}</span>}
+      </div>
+    </div>
+  );
+}
+
 export default function ClientGallery() {
-  const [code, setCode] = useState('');
-  const [gallery, setGallery] = useState(null);
-  const [photos, setPhotos] = useState([]);
-  const [error, setError] = useState('');
-  const [loading, setLoading] = useState(false);
+  const [code,     setCode]     = useState('');
+  const [gallery,  setGallery]  = useState(null);
+  const [photos,   setPhotos]   = useState([]);
+  const [error,    setError]    = useState('');
+  const [loading,  setLoading]  = useState(false);
   const [lightbox, setLightbox] = useState(null);
+  const [lbIndex,  setLbIndex]  = useState(0);
 
   async function handleAccess(e) {
     e.preventDefault();
@@ -29,13 +68,36 @@ export default function ClientGallery() {
     setLoading(false);
   }
 
+  function openLightbox(photo) {
+    const idx = photos.findIndex(p => p.id === photo.id);
+    setLbIndex(idx);
+    setLightbox(photo);
+  }
+
+  function navLightbox(dir) {
+    const next = (lbIndex + dir + photos.length) % photos.length;
+    setLbIndex(next);
+    setLightbox(photos[next]);
+  }
+
+  // keyboard nav
+  useEffect(() => {
+    if (!lightbox) return;
+    function onKey(e) {
+      if (e.key === 'ArrowRight') navLightbox(1);
+      if (e.key === 'ArrowLeft')  navLightbox(-1);
+      if (e.key === 'Escape')     setLightbox(null);
+    }
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [lightbox, lbIndex]);
+
   if (gallery) {
     return (
       <main className="client-gallery-page">
         <div className="client-gallery-header container">
-          <div>
-            <p className="section-label">Freddie Visuals · Private Gallery</p>
-            <h1 className="section-title">{gallery.client_name}</h1>
+          <div className="client-gallery-header__text">
+            <h1 className="client-gallery-title">{gallery.client_name}</h1>
             {gallery.event_name && <p className="client-gallery-event">{gallery.event_name}</p>}
             {gallery.event_date && (
               <p className="client-gallery-date">
@@ -43,13 +105,13 @@ export default function ClientGallery() {
               </p>
             )}
           </div>
-          <button className="btn btn-outline" onClick={() => { setGallery(null); setPhotos([]); setCode(''); }}>
+          <button className="btn btn-outline client-gallery-exit" onClick={() => { setGallery(null); setPhotos([]); setCode(''); }}>
             <LogOut size={14} /> Exit Gallery
           </button>
         </div>
 
         <div className="client-gallery-stats container">
-          <span><Image size={14} /> {photos.length} Photos in your gallery</span>
+          <span><Image size={14} /> {photos.length} Photos</span>
         </div>
 
         {photos.length === 0 ? (
@@ -59,14 +121,8 @@ export default function ClientGallery() {
           </div>
         ) : (
           <div className="client-gallery-grid container">
-            {photos.map(photo => (
-              <div key={photo.id} className="client-photo" onClick={() => setLightbox(photo)}>
-                <img src={photo.image_url} alt={photo.caption || ''} loading="lazy" />
-                <div className="client-photo__overlay">
-                  <Eye size={20} />
-                  {photo.caption && <span>{photo.caption}</span>}
-                </div>
-              </div>
+            {photos.map((photo, i) => (
+              <Photo key={photo.id} photo={photo} index={i} onClick={openLightbox} />
             ))}
           </div>
         )}
@@ -75,15 +131,28 @@ export default function ClientGallery() {
           <div className="lightbox" onClick={() => setLightbox(null)}>
             <div className="lightbox__inner" onClick={e => e.stopPropagation()}>
               <img src={lightbox.image_url} alt={lightbox.caption || ''} />
-              <div className="lightbox__meta" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span style={{ fontFamily: 'Cormorant Garamond, serif', fontSize: '1.2rem', color: 'var(--white)' }}>
-                  {lightbox.caption || 'Untitled'}
-                </span>
-                <a href={lightbox.image_url} download className="btn btn-outline" style={{ padding: '0.5rem 1rem', fontSize: '0.65rem' }} onClick={e => e.stopPropagation()}>
+              <div className="lightbox__meta">
+                <div>
+                  <span className="lightbox__counter">{lbIndex + 1} / {photos.length}</span>
+                  <span className="lightbox__caption">{lightbox.caption || 'Untitled'}</span>
+                </div>
+                <a
+                  href={lightbox.image_url}
+                  download
+                  className="btn btn-outline"
+                  style={{ padding: '0.5rem 1rem', fontSize: '0.65rem', flexShrink: 0 }}
+                  onClick={e => e.stopPropagation()}
+                >
                   <Download size={13} /> Download
                 </a>
               </div>
             </div>
+            {photos.length > 1 && (
+              <>
+                <button className="lightbox__nav lightbox__nav--prev" onClick={e => { e.stopPropagation(); navLightbox(-1); }}>‹</button>
+                <button className="lightbox__nav lightbox__nav--next" onClick={e => { e.stopPropagation(); navLightbox(1); }}>›</button>
+              </>
+            )}
             <button className="lightbox__close" onClick={() => setLightbox(null)}>✕</button>
           </div>
         )}

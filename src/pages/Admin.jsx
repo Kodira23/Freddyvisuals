@@ -38,6 +38,13 @@ function isVideoFile(file) {
   return /\.(mp4|mov|avi|webm|mkv|m4v|wmv|flv|3gp)$/i.test(file.name);
 }
 
+// URL‑based video detection (for existing media)
+function isVideoUrl(url) {
+  if (!url) return false;
+  const ext = url.split('.').pop().toLowerCase();
+  return ['mp4', 'mov', 'avi', 'webm', 'mkv', 'm4v', 'wmv', 'flv', '3gp'].includes(ext);
+}
+
 function isMediaFile(file, allowVideo = false) {
   return isImageFile(file) || (allowVideo && isVideoFile(file));
 }
@@ -128,7 +135,7 @@ function UploadProgress({ items }) {
 
 // ── Media preview (image or video) ───────────────────────────────────
 function MediaPreview({ src, alt, file, className, onError }) {
-  const isVid = file ? isVideoFile(file) : /\.(mp4|mov|avi|webm|mkv|m4v|wmv|flv|3gp)$/i.test(src || '');
+  const isVid = file ? isVideoFile(file) : isVideoUrl(src);
   if (isVid) {
     return (
       <video
@@ -564,7 +571,7 @@ function GalleryTab() {
       ) : (
         <div className="adm-gallery-grid">
           {filtered.map(row => {
-            const isVid = row.media_type === 'video' || isVideoFile({ name: row.image_url });
+            const isVid = row.media_type === 'video' || isVideoUrl(row.image_url);
             return (
               <div key={row.id} className={`adm-gal-item ${row.featured ? 'adm-gal-item--star' : ''} ${isVid ? 'adm-gal-item--video' : ''}`}>
                 {isVid ? (
@@ -645,7 +652,7 @@ function GalleryTab() {
               </div>
             );
           })}
-          {filtered.length === 0 && <div className="adm-empty-grid">No photos yet — upload some above.</div>}
+          {filtered.length === 0 && <div className="adm-empty-grid">No media yet — upload some above.</div>}
         </div>
       )}
     </div>
@@ -937,7 +944,7 @@ function ServicesTab() {
   }
 
   // Determine if current cover is a video
-  const coverIsVideo = imgFile ? isVideoFile(imgFile) : /\.(mp4|mov|avi|webm|mkv|m4v)$/i.test(form.image_url || '');
+  const coverIsVideo = imgFile ? isVideoFile(imgFile) : isVideoUrl(form.image_url || '');
 
   return (
     <div>
@@ -1039,7 +1046,7 @@ function ServicesTab() {
       {loading ? <div className="adm-loading"><Loader size={18} className="spin" /> Loading…</div> : (
         <div className="adm-services-list">
           {rows.map(row => {
-            const serviceIsVid = /\.(mp4|mov|avi|webm|mkv|m4v)$/i.test(row.image_url || '');
+            const serviceIsVid = isVideoUrl(row.image_url || '');
             return (
               <div key={row.id} className="adm-service-card">
                 {row.image_url && (

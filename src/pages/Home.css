@@ -493,3 +493,38 @@
   .hero__card-title { font-size: 2.2rem; }
   .hero__card-divider { margin: 0 auto 1.5rem; }
 }
+/* Video thumbnail in gallery preview */
+.gallery-preview__video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.gallery-preview__item {
+  position: relative;
+  overflow: hidden;
+  cursor: pointer;
+}
+
+/* Optional: Add a subtle overlay for video cards to indicate they are videos */
+.gallery-preview__item video {
+  transition: transform 0.3s ease;
+}
+.gallery-preview__item:hover video {
+  transform: scale(1.02);
+}
+
+/* If you want to show a play icon overlay on video items */
+.gallery-preview__item.video-item::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 50px;
+  height: 50px;
+  background: rgba(0,0,0,0.6);
+  border-radius: 50%;
+  pointer-events: none;
+}

@@ -25,8 +25,8 @@ export default function Footer() {
         <div className="footer__contact">
           <h4>Get in Touch</h4>
           <ul>
-            <li><Phone size={14} /> +254 700 000 000</li>
-            <li><Mail size={14} /> hello@freddievisuals.com</li>
+            <li><Phone size={14} /> +254 708422738</li>
+            <li><Mail size={14} /> Freddie2074@gmail.com</li>
             <li><MapPin size={14} /> Nairobi, Kenya</li>
           </ul>
         </div>

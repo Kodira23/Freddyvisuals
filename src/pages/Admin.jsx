@@ -6,7 +6,7 @@ import {
   Eye, EyeOff, ChevronDown, ChevronUp,
   AlertCircle, CloudUpload, Loader, Star, StarOff,
   Phone, Calendar, MessageSquare,
-  CheckCircle2, Upload, Video
+  CheckCircle2, Upload
 } from 'lucide-react';
 import './Admin.css';
 
@@ -17,15 +17,6 @@ const BUCKET_SERVICES = 'service-covers';
 const GALLERY_CATS    = ['Wedding','Events','Portrait','Maternity','Videography','Commercial'];
 const SERVICE_TITLES  = ['Wedding Photography','Events Coverage','Portrait Sessions','Maternity Photography','Videography','Commercial & Brand'];
 
-// Updated to accept both images and videos
-function isMediaFile(file) {
-  const imageTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/bmp', 'image/svg+xml'];
-  const videoTypes = ['video/mp4', 'video/quicktime', 'video/x-msvideo', 'video/x-matroska', 'video/webm', 'video/ogg'];
-  if (imageTypes.includes(file.type) || videoTypes.includes(file.type)) return true;
-  const ext = file.name.split('.').pop().toLowerCase();
-  return /\.(jpg|jpeg|png|gif|webp|bmp|svg|heic|heif|avif|tiff|tif|jfif|mp4|mov|avi|mkv|webm|ogv)$/i.test(file.name);
-}
-
 async function uploadFile(bucket, file) {
   const ext  = file.name.split('.').pop();
   const path = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
@@ -34,6 +25,11 @@ async function uploadFile(bucket, file) {
   const { data } = supabase.storage.from(bucket).getPublicUrl(path);
   if (!data?.publicUrl) throw new Error('Could not get public URL — is the bucket set to Public?');
   return data.publicUrl;
+}
+
+function isImageFile(file) {
+  if (file.type.startsWith('image/')) return true;
+  return /\.(heic|heif|avif|tiff|tif|jfif|webp|jpg|jpeg|png|gif|bmp|svg)$/i.test(file.name);
 }
 
 // ── Inline delete confirmation (no modal overlay) ─────────────────────
@@ -47,15 +43,15 @@ function InlineConfirm({ onConfirm, onCancel }) {
   );
 }
 
-// ── Drag-and-drop upload zone (updated for videos) ──────────────────────────
-function DropZone({ onFiles, uploading, multiple = true, label = 'Drag & drop photos or videos here, or click to browse' }) {
+// ── Drag-and-drop upload zone ──────────────────────────────────────────
+function DropZone({ onFiles, uploading, multiple = true, label = 'Drag & drop photos here, or click to browse' }) {
   const ref = useRef();
   const [over, setOver] = useState(false);
 
   const drop = useCallback(e => {
     e.preventDefault();
     setOver(false);
-    const files = Array.from(e.dataTransfer.files).filter(isMediaFile);
+    const files = Array.from(e.dataTransfer.files).filter(isImageFile);
     if (files.length) onFiles(files);
   }, [onFiles]);
 
@@ -70,18 +66,18 @@ function DropZone({ onFiles, uploading, multiple = true, label = 'Drag & drop ph
       <input
         ref={ref}
         type="file"
-        accept="image/*,video/*,.heic,.heif,.avif,.tiff,.tif,.jfif,.mov,.mp4,.avi,.mkv,.webm,.ogv"
+        accept="image/*,.heic,.heif,.avif,.tiff,.tif,.jfif"
         multiple={multiple}
         style={{ display: 'none' }}
         onChange={e => {
-          const f = Array.from(e.target.files).filter(isMediaFile);
+          const f = Array.from(e.target.files).filter(isImageFile);
           if (f.length) onFiles(f);
           e.target.value = '';
         }}
       />
       {uploading
         ? <><Loader size={26} className="spin" /><p>Uploading to Supabase Storage…</p></>
-        : <><CloudUpload size={30} /><p>{label}</p><span>Images (JPG, PNG, WEBP, HEIC, TIFF) · Videos (MP4, MOV, AVI, MKV, WEBM)</span></>
+        : <><CloudUpload size={30} /><p>{label}</p><span>JPG · PNG · WEBP · HEIC · AVIF · TIFF</span></>
       }
     </div>
   );
@@ -105,7 +101,7 @@ function UploadProgress({ items }) {
   );
 }
 
-// ── Pre-upload confirm panel (video icon for videos) ──────────────────────────
+// ── Pre-upload confirm panel ──────────────────────────────────────────
 function UploadConfirmPanel({ files, cat, featured, onConfirm, onCancel, uploading }) {
   const [names, setNames] = useState(() =>
     files.map(f => f.name.replace(/\.[^.]+$/, '').replace(/[-_]/g, ' '))
@@ -115,31 +111,24 @@ function UploadConfirmPanel({ files, cat, featured, onConfirm, onCancel, uploadi
     <div className="upload-confirm-panel">
       <div className="upload-confirm-panel__header">
         <Upload size={15} />
-        <strong>Confirm Upload — {files.length} file{files.length > 1 ? 's' : ''}</strong>
+        <strong>Confirm Upload — {files.length} photo{files.length > 1 ? 's' : ''}</strong>
         <button className="adm-icon-btn" onClick={onCancel} disabled={uploading}><X size={14} /></button>
       </div>
 
       <div className="upload-confirm-panel__list">
         {files.map((file, i) => {
-          const isVideo = file.type.startsWith('video/') || /\.(mp4|mov|avi|mkv|webm|ogv)$/i.test(file.name);
-          const preview = isVideo ? null : URL.createObjectURL(file);
+          const preview = URL.createObjectURL(file);
           return (
             <div key={i} className="upload-confirm-item">
-              {preview ? (
-                <img src={preview} alt="" className="upload-confirm-item__thumb" />
-              ) : (
-                <div className="upload-confirm-item__thumb video-thumb">
-                  <Video size={24} />
-                </div>
-              )}
+              <img src={preview} alt="" className="upload-confirm-item__thumb" />
               <div className="upload-confirm-item__info">
                 <input
                   className="upload-confirm-item__name"
                   value={names[i]}
                   onChange={e => setNames(n => n.map((v, j) => j === i ? e.target.value : v))}
-                  placeholder="File name…"
+                  placeholder="Image name…"
                 />
-                <span className="adm-tag">{cat}{featured ? ' · Featured' : ''} {isVideo && '· Video'}</span>
+                <span className="adm-tag">{cat}{featured ? ' · Featured' : ''}</span>
               </div>
             </div>
           );
@@ -148,7 +137,7 @@ function UploadConfirmPanel({ files, cat, featured, onConfirm, onCancel, uploadi
 
       <div className="upload-confirm-panel__footer">
         <button className="adm-btn-primary" onClick={() => onConfirm(names)} disabled={uploading}>
-          {uploading ? <><Loader size={13} className="spin" /> Uploading…</> : <><Check size={13} /> Upload {files.length} File{files.length > 1 ? 's' : ''}</>}
+          {uploading ? <><Loader size={13} className="spin" /> Uploading…</> : <><Check size={13} /> Upload {files.length} Photo{files.length > 1 ? 's' : ''}</>}
         </button>
         <button className="adm-btn-outline" onClick={onCancel} disabled={uploading}>Cancel</button>
       </div>
@@ -375,8 +364,14 @@ function GalleryTab() {
   const [filter,      setFilter]      = useState('All');
   const [msg,         setMsg]         = useState('');
   const [errMsg,      setErrMsg]      = useState('');
+
+  // pending files waiting for confirmation
   const [pendingFiles, setPendingFiles] = useState(null);
+
+  // inline delete: which item id is pending delete confirm
   const [deleteConfirmId, setDeleteConfirmId] = useState(null);
+
+  // inline name editing
   const [editingId,   setEditingId]   = useState(null);
   const [editingName, setEditingName] = useState('');
 
@@ -389,10 +384,12 @@ function GalleryTab() {
   }
   useEffect(() => { load(); }, []);
 
+  // Step 1: user drops files → show confirm panel
   function handleFiles(files) {
     setPendingFiles(files);
   }
 
+  // Step 2: user confirms with (possibly edited) names → upload
   async function doUpload(names) {
     const files = pendingFiles;
     setPendingFiles(null);
@@ -415,7 +412,7 @@ function GalleryTab() {
     }
 
     setUploading(false);
-    setMsg(`✓ ${files.length} file(s) processed.`);
+    setMsg(`✓ ${files.length} photo(s) processed.`);
     setTimeout(() => { setMsg(''); setErrMsg(''); setProgress([]); }, 6000);
     load();
   }
@@ -425,6 +422,7 @@ function GalleryTab() {
     load();
   }
 
+  // Inline delete: first click arms the confirm, second confirms
   async function doDelete(item) {
     setDeleteConfirmId(null);
     try {
@@ -435,6 +433,7 @@ function GalleryTab() {
     load();
   }
 
+  // Save edited name
   async function saveEditName(id) {
     if (editingName.trim()) {
       await supabase.from('gallery').update({ title: editingName.trim() }).eq('id', id);
@@ -446,23 +445,18 @@ function GalleryTab() {
 
   const filtered = filter === 'All' ? rows : rows.filter(r => r.category === filter);
 
-  const isVideoUrl = (url) => {
-    const ext = url.split('.').pop().toLowerCase();
-    return ['mp4', 'mov', 'avi', 'mkv', 'webm', 'ogv'].includes(ext);
-  };
-
   return (
     <div>
       <div className="adm-notice">
         <AlertCircle size={14} />
         <span>
-          Photos and videos upload to your <strong>Supabase Storage</strong> bucket <code>gallery</code>.
-          Make sure the bucket is set to <strong>Public</strong> — otherwise media will appear black.
+          Photos upload to your <strong>Supabase Storage</strong> bucket <code>gallery</code>.
+          Make sure the bucket is set to <strong>Public</strong> — otherwise images will appear black.
         </span>
       </div>
 
       <div className="adm-card">
-        <h3 className="adm-card__title">Upload Media to Gallery</h3>
+        <h3 className="adm-card__title">Upload Photos to Gallery</h3>
         <div className="adm-upload-opts">
           <div className="adm-field">
             <label>Category</label>
@@ -476,6 +470,7 @@ function GalleryTab() {
           </label>
         </div>
 
+        {/* Show confirm panel OR dropzone */}
         {pendingFiles ? (
           <UploadConfirmPanel
             files={pendingFiles}
@@ -507,82 +502,75 @@ function GalleryTab() {
         <div className="adm-loading"><Loader size={20} className="spin" /> Loading gallery…</div>
       ) : (
         <div className="adm-gallery-grid">
-          {filtered.map(row => {
-            const isVideo = isVideoUrl(row.image_url);
-            return (
-              <div key={row.id} className={`adm-gal-item ${row.featured ? 'adm-gal-item--star' : ''}`}>
-                {isVideo ? (
-                  <video controls preload="metadata" style={{ width: '100%', height: 'auto', maxHeight: '180px', objectFit: 'cover' }}>
-                    <source src={row.image_url} type={`video/${row.image_url.split('.').pop()}`} />
-                  </video>
-                ) : (
-                  <img
-                    src={row.image_url}
-                    alt={row.title}
-                    onError={e => {
-                      e.target.style.opacity = '0.2';
-                      e.target.title = 'Failed to load — check bucket is Public in Supabase';
-                    }}
-                  />
-                )}
-                <div className="adm-gal-item__info">
-                  <span className="adm-gal-item__cat">{row.category}</span>
+          {filtered.map(row => (
+            <div key={row.id} className={`adm-gal-item ${row.featured ? 'adm-gal-item--star' : ''}`}>
+              <img
+                src={row.image_url}
+                alt={row.title}
+                onError={e => {
+                  e.target.style.opacity = '0.2';
+                  e.target.title = 'Failed to load — check bucket is Public in Supabase';
+                }}
+              />
+              <div className="adm-gal-item__info">
+                <span className="adm-gal-item__cat">{row.category}</span>
 
-                  {editingId === row.id ? (
-                    <div className="adm-gal-item__name-edit">
-                      <input
-                        autoFocus
-                        value={editingName}
-                        onChange={e => setEditingName(e.target.value)}
-                        onKeyDown={e => {
-                          if (e.key === 'Enter') saveEditName(row.id);
-                          if (e.key === 'Escape') { setEditingId(null); setEditingName(''); }
-                        }}
-                        className="adm-gal-item__name-input"
-                      />
-                      <button onClick={() => saveEditName(row.id)} className="green" title="Save"><Check size={11} /></button>
-                      <button onClick={() => { setEditingId(null); setEditingName(''); }} title="Cancel"><X size={11} /></button>
-                    </div>
-                  ) : (
-                    <span
-                      className="adm-gal-item__title adm-gal-item__title--editable"
-                      title="Click to rename"
-                      onClick={() => { setEditingId(row.id); setEditingName(row.title); setDeleteConfirmId(null); }}
-                    >
-                      {row.title} <Edit3 size={10} className="adm-edit-hint" />
-                    </span>
-                  )}
-
-                  <div className="adm-gal-item__btns">
-                    <button
-                      onClick={() => { toggleFeatured(row); }}
-                      title={row.featured ? 'Unfeature' : 'Feature'}
-                      className={row.featured ? 'gold' : ''}
-                    >
-                      {row.featured ? <Star size={13} fill="currentColor" /> : <StarOff size={13} />}
-                    </button>
-
-                    {deleteConfirmId === row.id ? (
-                      <InlineConfirm
-                        onConfirm={() => doDelete(row)}
-                        onCancel={() => setDeleteConfirmId(null)}
-                      />
-                    ) : (
-                      <button
-                        onClick={() => { setDeleteConfirmId(row.id); setEditingId(null); }}
-                        className="red"
-                        title="Delete"
-                      >
-                        <Trash2 size={13} />
-                      </button>
-                    )}
+                {/* Editable image name */}
+                {editingId === row.id ? (
+                  <div className="adm-gal-item__name-edit">
+                    <input
+                      autoFocus
+                      value={editingName}
+                      onChange={e => setEditingName(e.target.value)}
+                      onKeyDown={e => {
+                        if (e.key === 'Enter') saveEditName(row.id);
+                        if (e.key === 'Escape') { setEditingId(null); setEditingName(''); }
+                      }}
+                      className="adm-gal-item__name-input"
+                    />
+                    <button onClick={() => saveEditName(row.id)} className="green" title="Save"><Check size={11} /></button>
+                    <button onClick={() => { setEditingId(null); setEditingName(''); }} title="Cancel"><X size={11} /></button>
                   </div>
+                ) : (
+                  <span
+                    className="adm-gal-item__title adm-gal-item__title--editable"
+                    title="Click to rename"
+                    onClick={() => { setEditingId(row.id); setEditingName(row.title); setDeleteConfirmId(null); }}
+                  >
+                    {row.title} <Edit3 size={10} className="adm-edit-hint" />
+                  </span>
+                )}
+
+                <div className="adm-gal-item__btns">
+                  <button
+                    onClick={() => { toggleFeatured(row); }}
+                    title={row.featured ? 'Unfeature' : 'Feature'}
+                    className={row.featured ? 'gold' : ''}
+                  >
+                    {row.featured ? <Star size={13} fill="currentColor" /> : <StarOff size={13} />}
+                  </button>
+
+                  {/* Inline delete confirm */}
+                  {deleteConfirmId === row.id ? (
+                    <InlineConfirm
+                      onConfirm={() => doDelete(row)}
+                      onCancel={() => setDeleteConfirmId(null)}
+                    />
+                  ) : (
+                    <button
+                      onClick={() => { setDeleteConfirmId(row.id); setEditingId(null); }}
+                      className="red"
+                      title="Delete"
+                    >
+                      <Trash2 size={13} />
+                    </button>
+                  )}
                 </div>
-                {row.featured && <div className="adm-gal-item__badge">Featured</div>}
               </div>
-            );
-          })}
-          {filtered.length === 0 && <div className="adm-empty-grid">No media yet — upload some above.</div>}
+              {row.featured && <div className="adm-gal-item__badge">Featured</div>}
+            </div>
+          ))}
+          {filtered.length === 0 && <div className="adm-empty-grid">No photos yet — upload some above.</div>}
         </div>
       )}
     </div>
@@ -604,6 +592,8 @@ function AlbumsTab() {
   const [msg,             setMsg]             = useState('');
   const [deleteAlbumId,   setDeleteAlbumId]   = useState(null);
   const [deletePhotoInfo, setDeletePhotoInfo] = useState(null);
+
+  // pending client photos waiting for confirm
   const [pendingClientFiles, setPendingClientFiles] = useState(null);
   const [pendingGalleryId,   setPendingGalleryId]   = useState(null);
 
@@ -690,16 +680,11 @@ function AlbumsTab() {
     setForm(f => ({ ...f, access_code: `${slug}${rand}` }));
   }
 
-  const isVideoUrl = (url) => {
-    const ext = url.split('.').pop().toLowerCase();
-    return ['mp4', 'mov', 'avi', 'mkv', 'webm', 'ogv'].includes(ext);
-  };
-
   return (
     <div>
       <div className="adm-notice">
         <AlertCircle size={14} />
-        <span>Photos and videos upload to Supabase Storage bucket <code>client-photos</code>. Clients access their album using the code at <strong>/album</strong>.</span>
+        <span>Photos upload to Supabase Storage bucket <code>client-photos</code>. Clients access their album using the code at <strong>/album</strong>.</span>
       </div>
 
       <div className="adm-card">
@@ -744,10 +729,11 @@ function AlbumsTab() {
                     {row.event_name && <span className="adm-tag">{row.event_name}</span>}
                     {row.event_date && <span className="adm-muted-sm">{new Date(row.event_date).toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' })}</span>}
                     <span className="adm-code-badge"><Lock size={11} /> {row.access_code}</span>
-                    {photos[row.id] && <span className="adm-muted-sm">{photos[row.id].length} items</span>}
+                    {photos[row.id] && <span className="adm-muted-sm">{photos[row.id].length} photos</span>}
                   </div>
                 </div>
                 <div className="adm-album-card__actions">
+                  {/* Inline album delete */}
                   {deleteAlbumId === row.id ? (
                     <InlineConfirm
                       onConfirm={doDeleteAlbum}
@@ -762,6 +748,7 @@ function AlbumsTab() {
 
               {expanded === row.id && (
                 <div className="adm-album-card__body">
+                  {/* Pre-upload confirm for client photos */}
                   {pendingClientFiles && pendingGalleryId === row.id ? (
                     <UploadConfirmPanel
                       files={pendingClientFiles}
@@ -775,37 +762,29 @@ function AlbumsTab() {
                     <DropZone
                       onFiles={files => { setPendingClientFiles(files); setPendingGalleryId(row.id); }}
                       uploading={uploading === row.id}
-                      label={`Drop media for ${row.client_name} here`}
+                      label={`Drop photos for ${row.client_name} here`}
                     />
                   )}
                   {uploading === row.id && <UploadProgress items={progress} />}
                   <div className="adm-client-photos-grid">
-                    {(photos[row.id] || []).map(p => {
-                      const isVideo = isVideoUrl(p.image_url);
-                      return (
-                        <div key={p.id} className="adm-client-photo">
-                          {isVideo ? (
-                            <video controls preload="metadata" style={{ width: '100%', height: '100%', objectFit: 'cover' }}>
-                              <source src={p.image_url} type={`video/${p.image_url.split('.').pop()}`} />
-                            </video>
-                          ) : (
-                            <img src={p.image_url} alt="" onError={e => { e.target.style.opacity = '0.2'; }} />
-                          )}
-                          {deletePhotoInfo?.pid === p.id ? (
-                            <div className="adm-client-photo__inline-del">
-                              <InlineConfirm
-                                onConfirm={doDeletePhoto}
-                                onCancel={() => setDeletePhotoInfo(null)}
-                              />
-                            </div>
-                          ) : (
-                            <button className="adm-client-photo__del" onClick={() => setDeletePhotoInfo({ pid: p.id, gid: row.id })}><X size={11} /></button>
-                          )}
-                        </div>
-                      );
-                    })}
+                    {(photos[row.id] || []).map(p => (
+                      <div key={p.id} className="adm-client-photo">
+                        <img src={p.image_url} alt="" onError={e => { e.target.style.opacity = '0.2'; }} />
+                        {/* Inline photo delete */}
+                        {deletePhotoInfo?.pid === p.id ? (
+                          <div className="adm-client-photo__inline-del">
+                            <InlineConfirm
+                              onConfirm={doDeletePhoto}
+                              onCancel={() => setDeletePhotoInfo(null)}
+                            />
+                          </div>
+                        ) : (
+                          <button className="adm-client-photo__del" onClick={() => setDeletePhotoInfo({ pid: p.id, gid: row.id })}><X size={11} /></button>
+                        )}
+                      </div>
+                    ))}
                     {(photos[row.id] || []).length === 0 && !uploading && (
-                      <p className="adm-muted" style={{ gridColumn: '1/-1', padding: '1rem 0' }}>No media yet.</p>
+                      <p className="adm-muted" style={{ gridColumn: '1/-1', padding: '1rem 0' }}>No photos yet.</p>
                     )}
                   </div>
                 </div>
@@ -820,7 +799,7 @@ function AlbumsTab() {
 }
 
 // ═════════════════════════════════════════════════════════════════════
-// SERVICES TAB (KSH version)
+// SERVICES TAB (updated to KSH)
 // ═════════════════════════════════════════════════════════════════════
 function ServicesTab() {
   const [rows,       setRows]       = useState([]);
@@ -909,6 +888,7 @@ function ServicesTab() {
                 </select>
               </div>
               <div className="adm-field">
+                {/* --- MODIFIED: price label and placeholder to KSH --- */}
                 <label>Starting Price (KSH)</label>
                 <input
                   type="number"
@@ -974,6 +954,7 @@ function ServicesTab() {
                     <h3>{row.title}</h3>
                     <span className="adm-tag">{row.duration}</span>
                   </div>
+                  {/* --- MODIFIED: price display to KSH --- */}
                   <div className="adm-service-card__price">
                     KSH {Number(row.price_from || 0).toLocaleString()}
                     <small>from</small>

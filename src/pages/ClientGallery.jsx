@@ -1,13 +1,16 @@
 import { useState, useEffect, useRef } from 'react';
-import { Lock, Download, Eye, LogOut, Image } from 'lucide-react';
+import { Lock, Download, Eye, LogOut, Image, Play, Volume2, VolumeX } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import './ClientGallery.css';
 
-// Hook: fires when element enters viewport
+function isVideoUrl(url) {
+  return /\.(mp4|mov|avi|webm|mkv|m4v|wmv|flv|3gp)(\?.*)?$/i.test(url || '');
+}
+
+// fires once when element enters viewport
 function useScrollReveal(options = {}) {
   const ref = useRef(null);
   const [visible, setVisible] = useState(false);
-
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
@@ -18,12 +21,71 @@ function useScrollReveal(options = {}) {
     obs.observe(el);
     return () => obs.disconnect();
   }, []);
-
   return [ref, visible];
 }
 
-// Individual photo with scroll-from-right reveal (mobile only via CSS)
-function Photo({ photo, index, onClick }) {
+// play when >=50% visible, pause when not
+function useVideoAutoplay(videoRef) {
+  useEffect(() => {
+    const el = videoRef.current;
+    if (!el) return;
+    const obs = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) { el.play().catch(() => {}); }
+        else { el.pause(); }
+      },
+      { threshold: 0.5 }
+    );
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, [videoRef]);
+}
+
+function VideoCard({ photo, index, onClick }) {
+  const [revealRef, visible] = useScrollReveal();
+  const videoRef = useRef(null);
+  useVideoAutoplay(videoRef);
+  const [muted, setMuted] = useState(true);
+
+  function setRefs(el) {
+    revealRef.current = el;
+    videoRef.current  = el;
+  }
+
+  return (
+    <div
+      className={`client-photo client-photo--video${visible ? ' client-photo--visible' : ''}`}
+      style={{ '--i': index }}
+      onClick={() => onClick(photo)}
+    >
+      <video
+        ref={setRefs}
+        src={photo.image_url}
+        muted={muted}
+        loop
+        playsInline
+        preload="metadata"
+        style={{ width: '100%', display: 'block' }}
+      />
+      <button
+        className="client-photo__mute"
+        onClick={e => { e.stopPropagation(); setMuted(m => !m); }}
+        title={muted ? 'Unmute' : 'Mute'}
+      >
+        {muted ? <VolumeX size={13} /> : <Volume2 size={13} />}
+      </button>
+      <div className="client-photo__overlay client-photo__overlay--video">
+        <Play size={22} />
+        {photo.caption && <span>{photo.caption}</span>}
+      </div>
+      <div className="client-photo__vid-badge">
+        <Play size={9} fill="currentColor" /> Video
+      </div>
+    </div>
+  );
+}
+
+function ImageCard({ photo, index, onClick }) {
   const [ref, visible] = useScrollReveal();
   return (
     <div
@@ -38,6 +100,21 @@ function Photo({ photo, index, onClick }) {
         {photo.caption && <span>{photo.caption}</span>}
       </div>
     </div>
+  );
+}
+
+function LightboxVideo({ src }) {
+  const ref = useRef(null);
+  useEffect(() => { ref.current?.play().catch(() => {}); }, [src]);
+  return (
+    <video
+      ref={ref}
+      src={src}
+      controls
+      autoPlay
+      playsInline
+      style={{ maxHeight: '78vh', width: '100%', objectFit: 'contain', display: 'block' }}
+    />
   );
 }
 
@@ -80,7 +157,6 @@ export default function ClientGallery() {
     setLightbox(photos[next]);
   }
 
-  // keyboard nav
   useEffect(() => {
     if (!lightbox) return;
     function onKey(e) {
@@ -111,7 +187,7 @@ export default function ClientGallery() {
         </div>
 
         <div className="client-gallery-stats container">
-          <span><Image size={14} /> {photos.length} Photos</span>
+          <span><Image size={14} /> {photos.length} Photos &amp; Videos</span>
         </div>
 
         {photos.length === 0 ? (
@@ -121,30 +197,37 @@ export default function ClientGallery() {
           </div>
         ) : (
           <div className="client-gallery-grid container">
-            {photos.map((photo, i) => (
-              <Photo key={photo.id} photo={photo} index={i} onClick={openLightbox} />
-            ))}
+            {photos.map((photo, i) =>
+              isVideoUrl(photo.image_url)
+                ? <VideoCard key={photo.id} photo={photo} index={i} onClick={openLightbox} />
+                : <ImageCard key={photo.id} photo={photo} index={i} onClick={openLightbox} />
+            )}
           </div>
         )}
 
         {lightbox && (
           <div className="lightbox" onClick={() => setLightbox(null)}>
             <div className="lightbox__inner" onClick={e => e.stopPropagation()}>
-              <img src={lightbox.image_url} alt={lightbox.caption || ''} />
+              {isVideoUrl(lightbox.image_url)
+                ? <LightboxVideo src={lightbox.image_url} />
+                : <img src={lightbox.image_url} alt={lightbox.caption || ''} />
+              }
               <div className="lightbox__meta">
                 <div>
                   <span className="lightbox__counter">{lbIndex + 1} / {photos.length}</span>
                   <span className="lightbox__caption">{lightbox.caption || 'Untitled'}</span>
                 </div>
-                <a
-                  href={lightbox.image_url}
-                  download
-                  className="btn btn-outline"
-                  style={{ padding: '0.5rem 1rem', fontSize: '0.65rem', flexShrink: 0 }}
-                  onClick={e => e.stopPropagation()}
-                >
-                  <Download size={13} /> Download
-                </a>
+                {!isVideoUrl(lightbox.image_url) && (
+                  <a
+                    href={lightbox.image_url}
+                    download
+                    className="btn btn-outline"
+                    style={{ padding: '0.5rem 1rem', fontSize: '0.65rem', flexShrink: 0 }}
+                    onClick={e => e.stopPropagation()}
+                  >
+                    <Download size={13} /> Download
+                  </a>
+                )}
               </div>
             </div>
             {photos.length > 1 && (

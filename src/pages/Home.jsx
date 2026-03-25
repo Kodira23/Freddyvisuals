@@ -4,6 +4,11 @@ import { Award, Camera, Users, Star, Film, Heart, Baby } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import './Home.css';
 
+// Helper to detect video URLs (copied from ClientGallery)
+function isVideoUrl(url) {
+  return /\.(mp4|mov|avi|webm|mkv|m4v|wmv|flv|3gp)(\?.*)?$/i.test(url || '');
+}
+
 const HERO_SLIDES = [
   {
     image: '_MG_2261.jpg',
@@ -47,26 +52,55 @@ const stats = [
   { icon: Star, value: '6 yrs', label: 'Experience' },
 ];
 
-const niches = [
-  { icon: Heart, title: 'Weddings', desc: 'Cinematic coverage of your most precious day, from first look to last dance.', link: '/services', image: '_MG_2261.jpg', video: null },
-  { icon: Users, title: 'Events', desc: 'Galas, launches, birthdays — every atmosphere captured with energy and precision.', link: '/services', image: 'Events1.jpeg', video: null },
-  { icon: Camera, title: 'Portraits', desc: 'Soulful, dramatic portraits that reveal authentic character and beauty.', link: '/services', image: 'Dem.png', video: null },
-  { icon: Baby, title: 'Maternity', desc: 'Tender, glowing imagery celebrating the miracle of new life and motherhood.', link: '/services', image: 'matan.png', video: null },
-  { icon: Film, title: 'Videography', desc: 'Short films and highlight reels that let you relive every heartbeat.', link: '/services', image: null, video: 'https://www.w3schools.com/html/mov_bbb.mp4' },
-  { icon: Award, title: 'Commercial', desc: 'Brand imagery and corporate coverage crafted to impress and convert.', link: '/services', image: 'corporates1.jpeg', video: null },
-];
-
 export default function Home() {
   const [gallery, setGallery] = useState(GALLERY_PLACEHOLDERS);
+  const [videoNicheVideo, setVideoNicheVideo] = useState(null);
 
+  // Fetch gallery items (including videos) from Supabase
   useEffect(() => {
     supabase.from('gallery').select('*').eq('featured', true).limit(6)
       .then(({ data }) => { if (data?.length) setGallery(data); });
   }, []);
 
+  // Fetch the first video from the gallery with category 'Videography'
+  useEffect(() => {
+    const fetchVideographyVideo = async () => {
+      const { data, error } = await supabase
+        .from('gallery')
+        .select('image_url')
+        .eq('category', 'Videography')
+        .order('created_at', { ascending: true }) // get the first one
+        .limit(1);
+      if (error) {
+        console.error('Error fetching videography video:', error);
+        return;
+      }
+      if (data && data.length > 0 && isVideoUrl(data[0].image_url)) {
+        setVideoNicheVideo(data[0].image_url);
+      }
+    };
+    fetchVideographyVideo();
+  }, []);
+
+  const niches = [
+    { icon: Heart, title: 'Weddings', desc: 'Cinematic coverage of your most precious day, from first look to last dance.', link: '/services', image: '_MG_2261.jpg', video: null },
+    { icon: Users, title: 'Events', desc: 'Galas, launches, birthdays — every atmosphere captured with energy and precision.', link: '/services', image: 'Events1.jpeg', video: null },
+    { icon: Camera, title: 'Portraits', desc: 'Soulful, dramatic portraits that reveal authentic character and beauty.', link: '/services', image: 'Dem.png', video: null },
+    { icon: Baby, title: 'Maternity', desc: 'Tender, glowing imagery celebrating the miracle of new life and motherhood.', link: '/services', image: 'matan.png', video: null },
+    { 
+      icon: Film, 
+      title: 'Videography', 
+      desc: 'Short films and highlight reels that let you relive every heartbeat.', 
+      link: '/services', 
+      image: null, 
+      video: videoNicheVideo || 'https://www.w3schools.com/html/mov_bbb.mp4' // fallback
+    },
+    { icon: Award, title: 'Commercial', desc: 'Brand imagery and corporate coverage crafted to impress and convert.', link: '/services', image: 'corporates1.jpeg', video: null },
+  ];
+
   return (
     <main className="home">
-      {/* ── Hero ── */}
+      {/* Hero Section */}
       <section className="hero">
         <div className="hero__photo-wrap">
           <div className="hero__bg hero__bg--active">
@@ -87,7 +121,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ── Stats ── */}
+      {/* Stats Section */}
       <section className="stats">
         <div className="container stats__grid">
           {stats.map(({ icon: Icon, value, label }) => (
@@ -100,7 +134,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ── About ── */}
+      {/* About Section */}
       <section className="about container">
         <div className="about__image-wrap">
           <img src="logos.png" alt="Freddie at work" className="about__image" />
@@ -130,7 +164,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ── What We Do ── */}
+      {/* What We Do Section */}
       <section className="niches">
         <div className="container niches__header">
           <p className="section-label">What We Do</p>
@@ -141,7 +175,7 @@ export default function Home() {
             <div key={title} className="niche-card">
               <div className="niche-card__image">
                 {video
-                  ? <video src={video} autoPlay muted loop playsInline />
+                  ? <video src={video} autoPlay muted loop playsInline poster="/placeholder-video.jpg" />
                   : image
                     ? <img src={image} alt={title} />
                     : <div className="niche-card__image-placeholder"><Icon size={28} /></div>
@@ -157,7 +191,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ── Gallery Preview ── */}
+      {/* Gallery Preview Section */}
       <section className="gallery-preview">
         <div className="container gallery-preview__header">
           <div>
@@ -171,7 +205,18 @@ export default function Home() {
         <div className="gallery-preview__grid container">
           {gallery.map((item, i) => (
             <div key={item.id} className={`gallery-preview__item gallery-preview__item--${i}`}>
-              <img src={item.image_url} alt={item.title} />
+              {isVideoUrl(item.image_url) ? (
+                <video
+                  src={item.image_url}
+                  muted
+                  autoPlay
+                  loop
+                  playsInline
+                  className="gallery-preview__video"
+                />
+              ) : (
+                <img src={item.image_url} alt={item.title} />
+              )}
               <div className="gallery-preview__overlay">
                 <span className="gallery-preview__cat">{item.category}</span>
                 <span className="gallery-preview__title">{item.title}</span>
@@ -181,7 +226,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ── Testimonial ── */}
+      {/* Testimonial Section */}
       <section className="testimonial container">
         <div className="testimonial__inner">
           <div className="testimonial__quote">"</div>
@@ -198,7 +243,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ── CTA ── */}
+      {/* CTA Section */}
       <section className="cta container">
         <div className="cta__inner">
           <p className="section-label">Let's Connect</p>

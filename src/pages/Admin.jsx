@@ -799,7 +799,7 @@ function AlbumsTab() {
 }
 
 // ═════════════════════════════════════════════════════════════════════
-// SERVICES TAB
+// SERVICES TAB (updated to KSH)
 // ═════════════════════════════════════════════════════════════════════
 function ServicesTab() {
   const [rows,       setRows]       = useState([]);
@@ -888,8 +888,14 @@ function ServicesTab() {
                 </select>
               </div>
               <div className="adm-field">
-                <label>Starting Price</label>
-                <input type="number" value={form.price_from} onChange={e => setForm(f => ({ ...f, price_from: e.target.value }))} placeholder="e.g. 1200" />
+                {/* --- MODIFIED: price label and placeholder to KSH --- */}
+                <label>Starting Price (KSH)</label>
+                <input
+                  type="number"
+                  value={form.price_from}
+                  onChange={e => setForm(f => ({ ...f, price_from: e.target.value }))}
+                  placeholder="e.g. 12000"
+                />
               </div>
               <div className="adm-field">
                 <label>Duration</label>
@@ -948,8 +954,9 @@ function ServicesTab() {
                     <h3>{row.title}</h3>
                     <span className="adm-tag">{row.duration}</span>
                   </div>
+                  {/* --- MODIFIED: price display to KSH --- */}
                   <div className="adm-service-card__price">
-                    ${Number(row.price_from || 0).toLocaleString()}
+                    KSH {Number(row.price_from || 0).toLocaleString()}
                     <small>from</small>
                   </div>
                 </div>

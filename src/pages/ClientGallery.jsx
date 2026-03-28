@@ -1,17 +1,14 @@
 import { useState, useEffect, useRef } from 'react';
-import { Lock, Download, Eye, LogOut, Image, Play, Volume2, VolumeX, AlertCircle } from 'lucide-react';
+import { Lock, Download, Eye, LogOut, Image, Play, Volume2, VolumeX } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import './ClientGallery.css';
 
-// ── Video URL detection ──────────────────────────────────────
-// Strips query params first so ?token=... doesn't fool the check
+// ── EXACT same function that works in Home.jsx ───────────────
 function isVideoUrl(url) {
-  if (!url) return false;
-  const clean = url.split('?')[0].toLowerCase();
-  return /\.(mp4|mov|avi|webm|mkv|m4v|wmv|flv|3gp)$/.test(clean);
+  return /\.(mp4|mov|avi|webm|mkv|m4v|wmv|flv|3gp)(\?.*)?$/i.test(url || '');
 }
 
-// ── Scroll reveal hook: slides card in from the right ────────
+// ── Scroll reveal: slides card in from the right ─────────────
 function useScrollReveal() {
   const ref = useRef(null);
   const [visible, setVisible] = useState(false);
@@ -30,15 +27,14 @@ function useScrollReveal() {
   return [ref, visible];
 }
 
-// ── Video card ───────────────────────────────────────────────
+// ── Video card ────────────────────────────────────────────────
 function VideoCard({ photo, index, onClick }) {
   const cardRef = useRef(null);
   const videoRef = useRef(null);
-  const [visible, setVisible]     = useState(false);
-  const [muted, setMuted]         = useState(true);
-  const [loadError, setLoadError] = useState(false);
+  const [visible, setVisible] = useState(false);
+  const [muted, setMuted] = useState(true);
 
-  // Card scroll-reveal
+  // Card scroll-reveal (slide from right)
   useEffect(() => {
     const el = cardRef.current;
     if (!el) return;
@@ -52,10 +48,10 @@ function VideoCard({ photo, index, onClick }) {
     return () => obs.disconnect();
   }, []);
 
-  // Video autoplay / pause when in/out of viewport
+  // Autoplay / pause based on viewport — same approach as Home.jsx niche card
   useEffect(() => {
     const el = videoRef.current;
-    if (!el || loadError) return;
+    if (!el) return;
     const obs = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting) {
@@ -68,44 +64,37 @@ function VideoCard({ photo, index, onClick }) {
     );
     obs.observe(el);
     return () => obs.disconnect();
-  }, [loadError]);
+  }, []);
 
   return (
     <div
       ref={cardRef}
       className={`client-photo client-photo--video${visible ? ' client-photo--visible' : ''}`}
       style={{ '--i': index }}
-      onClick={() => !loadError && onClick(photo)}
+      onClick={() => onClick(photo)}
     >
-      {loadError ? (
-        <div className="client-photo__video-error">
-          <AlertCircle size={20} />
-          <span>Video unavailable</span>
-          <small style={{ wordBreak: 'break-all', opacity: 0.5, fontSize: '0.6rem' }}>
-            {photo.image_url}
-          </small>
-        </div>
-      ) : (
-        <video
-          ref={videoRef}
-          src={photo.image_url}
-          muted={muted}
-          loop
-          playsInline
-          preload="metadata"
-          onError={() => setLoadError(true)}
-        />
-      )}
+      {/* 
+        Render exactly like Home.jsx niche-card video:
+        src, autoPlay, muted, loop, playsInline — no poster that could 404 
+      */}
+      <video
+        ref={videoRef}
+        src={photo.image_url}
+        autoPlay
+        muted={muted}
+        loop
+        playsInline
+        preload="metadata"
+      />
 
-      {!loadError && (
-        <button
-          className="client-photo__mute"
-          onClick={e => { e.stopPropagation(); setMuted(m => !m); }}
-          title={muted ? 'Unmute' : 'Mute'}
-        >
-          {muted ? <VolumeX size={13} /> : <Volume2 size={13} />}
-        </button>
-      )}
+      {/* Mute toggle */}
+      <button
+        className="client-photo__mute"
+        onClick={e => { e.stopPropagation(); setMuted(m => !m); }}
+        title={muted ? 'Unmute' : 'Mute'}
+      >
+        {muted ? <VolumeX size={13} /> : <Volume2 size={13} />}
+      </button>
 
       <div className="client-photo__overlay client-photo__overlay--video">
         <Play size={22} />
@@ -119,7 +108,7 @@ function VideoCard({ photo, index, onClick }) {
   );
 }
 
-// ── Image card ───────────────────────────────────────────────
+// ── Image card ────────────────────────────────────────────────
 function ImageCard({ photo, index, onClick }) {
   const [ref, visible] = useScrollReveal();
   return (
@@ -138,7 +127,7 @@ function ImageCard({ photo, index, onClick }) {
   );
 }
 
-// ── Lightbox video ───────────────────────────────────────────
+// ── Lightbox video ────────────────────────────────────────────
 function LightboxVideo({ src }) {
   const ref = useRef(null);
   useEffect(() => { ref.current?.play().catch(() => {}); }, [src]);
@@ -154,7 +143,7 @@ function LightboxVideo({ src }) {
   );
 }
 
-// ── Main component ───────────────────────────────────────────
+// ── Main component ────────────────────────────────────────────
 export default function ClientGallery() {
   const [code,     setCode]    = useState('');
   const [gallery,  setGallery] = useState(null);
@@ -211,7 +200,7 @@ export default function ClientGallery() {
     return () => window.removeEventListener('keydown', onKey);
   }, [lightbox, lbIndex]);
 
-  // ── Gallery view ─────────────────────────────────────────
+  // ── Gallery view ────────────────────────────────────────────
   if (gallery) {
     return (
       <main className="client-gallery-page">
@@ -242,7 +231,7 @@ export default function ClientGallery() {
         {photos.length === 0 ? (
           <div className="client-gallery-empty container">
             <Lock size={32} style={{ color: 'var(--gold)', marginBottom: '1rem' }} />
-            <p>Your photos are still being processed by Freddie Visuals. Check back soon!</p>
+            <p>Your photos are still being processed. Check back soon!</p>
           </div>
         ) : (
           <div className="client-gallery-grid container">
@@ -293,7 +282,7 @@ export default function ClientGallery() {
     );
   }
 
-  // ── Access page ───────────────────────────────────────────
+  // ── Access page ─────────────────────────────────────────────
   return (
     <main className="client-access-page">
       <div className="client-access-inner">

@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { X, ZoomIn } from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
+import { X, ZoomIn, Play, Volume2, VolumeX } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import './Gallery.css';
 
@@ -23,9 +23,89 @@ const PLACEHOLDER_GALLERY = [
   { id: 15, title: 'Cinematic Cut', category: 'Videography', image_url: 'https://images.unsplash.com/photo-1574717024653-61fd2cf4d44d?w=800&q=80' },
 ];
 
+// ── Detect if a gallery row is a video ───────────────────────
+function isVideoItem(item) {
+  if (!item?.image_url) return false;
+  if (item.media_type === 'video') return true;
+  if (item.media_type?.startsWith('video/')) return true;
+  if (/\.(mp4|mov|avi|webm|mkv|m4v|wmv|flv|3gp)/i.test(item.image_url)) return true;
+  return false;
+}
+
+// ── Video card with autoplay-on-scroll + mute toggle ─────────
+function VideoGalleryCard({ item, onClick }) {
+  const cardRef = useRef(null);
+  const videoRef = useRef(null);
+  const [muted, setMuted] = useState(true);
+
+  useEffect(() => {
+    const el = videoRef.current;
+    if (!el) return;
+    const obs = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) el.play().catch(() => {});
+        else el.pause();
+      },
+      { threshold: 0.4 }
+    );
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, []);
+
+  return (
+    <div ref={cardRef} className="gallery-card gallery-card--video" onClick={() => onClick(item)}>
+      <video
+        ref={videoRef}
+        src={item.image_url}
+        muted={muted}
+        loop
+        playsInline
+        preload="metadata"
+        style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+      />
+      {/* Mute toggle */}
+      <button
+        className="gallery-card__mute"
+        onClick={e => { e.stopPropagation(); setMuted(m => !m); }}
+        title={muted ? 'Unmute' : 'Mute'}
+      >
+        {muted ? <VolumeX size={13} /> : <Volume2 size={13} />}
+      </button>
+      {/* Video badge */}
+      <div className="gallery-card__vid-badge">
+        <Play size={9} fill="currentColor" /> Video
+      </div>
+      <div className="gallery-card__info">
+        <Play size={18} className="gallery-card__zoom" />
+        <div>
+          <span className="gallery-card__cat">{item.category}</span>
+          <span className="gallery-card__title">{item.title}</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── Lightbox video ────────────────────────────────────────────
+function LightboxVideo({ src }) {
+  const ref = useRef(null);
+  useEffect(() => { ref.current?.play().catch(() => {}); }, [src]);
+  return (
+    <video
+      ref={ref}
+      src={src}
+      controls
+      autoPlay
+      playsInline
+      style={{ maxHeight: '78vh', width: '100%', objectFit: 'contain', display: 'block' }}
+    />
+  );
+}
+
+// ── Main Gallery component ────────────────────────────────────
 export default function Gallery() {
-  const [images, setImages] = useState(PLACEHOLDER_GALLERY);
-  const [active, setActive] = useState('All');
+  const [images,   setImages]   = useState(PLACEHOLDER_GALLERY);
+  const [active,   setActive]   = useState('All');
   const [lightbox, setLightbox] = useState(null);
 
   useEffect(() => {
@@ -62,25 +142,32 @@ export default function Gallery() {
       </div>
 
       <div className="gallery-grid container">
-        {filtered.map(item => (
-          <div key={item.id} className="gallery-card" onClick={() => setLightbox(item)}>
-            <img src={item.image_url} alt={item.title} loading="lazy" />
-            <div className="gallery-card__info">
-              <ZoomIn size={18} className="gallery-card__zoom" />
-              <div>
-                <span className="gallery-card__cat">{item.category}</span>
-                <span className="gallery-card__title">{item.title}</span>
+        {filtered.map(item =>
+          isVideoItem(item) ? (
+            <VideoGalleryCard key={item.id} item={item} onClick={setLightbox} />
+          ) : (
+            <div key={item.id} className="gallery-card" onClick={() => setLightbox(item)}>
+              <img src={item.image_url} alt={item.title} loading="lazy" />
+              <div className="gallery-card__info">
+                <ZoomIn size={18} className="gallery-card__zoom" />
+                <div>
+                  <span className="gallery-card__cat">{item.category}</span>
+                  <span className="gallery-card__title">{item.title}</span>
+                </div>
               </div>
             </div>
-          </div>
-        ))}
+          )
+        )}
       </div>
 
       {lightbox && (
         <div className="lightbox" onClick={() => setLightbox(null)}>
           <button className="lightbox__close"><X size={24} /></button>
           <div className="lightbox__inner" onClick={e => e.stopPropagation()}>
-            <img src={lightbox.image_url} alt={lightbox.title} />
+            {isVideoItem(lightbox)
+              ? <LightboxVideo src={lightbox.image_url} />
+              : <img src={lightbox.image_url} alt={lightbox.title} />
+            }
             <div className="lightbox__meta">
               <span className="lightbox__cat">{lightbox.category}</span>
               <h3 className="lightbox__title">{lightbox.title}</h3>

@@ -32,9 +32,55 @@ function isVideoItem(item) {
   return false;
 }
 
-// ── Video card with autoplay-on-scroll + mute toggle ─────────
-function VideoGalleryCard({ item, onClick }) {
-  const cardRef = useRef(null);
+// ── Scroll reveal hook ───────────────────────────────────────
+function useScrollReveal(delay = 0) {
+  const ref = useRef(null);
+  const [visible, setVisible] = useState(false);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const obs = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setTimeout(() => setVisible(true), delay);
+          obs.disconnect();
+        }
+      },
+      { threshold: 0.08, rootMargin: '0px 0px -40px 0px' }
+    );
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, [delay]);
+
+  return [ref, visible];
+}
+
+// ── Image card with reveal ───────────────────────────────────
+function ImageGalleryCard({ item, index, onClick }) {
+  const [ref, visible] = useScrollReveal((index % 3) * 80);
+  return (
+    <div
+      ref={ref}
+      className={`gallery-card gallery-card--reveal${visible ? ' gallery-card--visible' : ''}`}
+      style={{ '--i': index }}
+      onClick={() => onClick(item)}
+    >
+      <img src={item.image_url} alt={item.title} loading="lazy" />
+      <div className="gallery-card__info">
+        <ZoomIn size={18} className="gallery-card__zoom" />
+        <div>
+          <span className="gallery-card__cat">{item.category}</span>
+          <span className="gallery-card__title">{item.title}</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── Video card with reveal + autoplay-on-scroll ──────────────
+function VideoGalleryCard({ item, index, onClick }) {
+  const [ref, visible] = useScrollReveal((index % 3) * 80);
   const videoRef = useRef(null);
   const [muted, setMuted] = useState(true);
 
@@ -53,7 +99,12 @@ function VideoGalleryCard({ item, onClick }) {
   }, []);
 
   return (
-    <div ref={cardRef} className="gallery-card gallery-card--video" onClick={() => onClick(item)}>
+    <div
+      ref={ref}
+      className={`gallery-card gallery-card--video gallery-card--reveal${visible ? ' gallery-card--visible' : ''}`}
+      style={{ '--i': index }}
+      onClick={() => onClick(item)}
+    >
       <video
         ref={videoRef}
         src={item.image_url}
@@ -61,9 +112,8 @@ function VideoGalleryCard({ item, onClick }) {
         loop
         playsInline
         preload="metadata"
-        style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+        style={{ width: '100%', display: 'block', transition: 'transform 0.5s ease' }}
       />
-      {/* Mute toggle */}
       <button
         className="gallery-card__mute"
         onClick={e => { e.stopPropagation(); setMuted(m => !m); }}
@@ -71,7 +121,6 @@ function VideoGalleryCard({ item, onClick }) {
       >
         {muted ? <VolumeX size={13} /> : <Volume2 size={13} />}
       </button>
-      {/* Video badge */}
       <div className="gallery-card__vid-badge">
         <Play size={9} fill="currentColor" /> Video
       </div>
@@ -142,20 +191,11 @@ export default function Gallery() {
       </div>
 
       <div className="gallery-grid container">
-        {filtered.map(item =>
+        {filtered.map((item, index) =>
           isVideoItem(item) ? (
-            <VideoGalleryCard key={item.id} item={item} onClick={setLightbox} />
+            <VideoGalleryCard key={item.id} item={item} index={index} onClick={setLightbox} />
           ) : (
-            <div key={item.id} className="gallery-card" onClick={() => setLightbox(item)}>
-              <img src={item.image_url} alt={item.title} loading="lazy" />
-              <div className="gallery-card__info">
-                <ZoomIn size={18} className="gallery-card__zoom" />
-                <div>
-                  <span className="gallery-card__cat">{item.category}</span>
-                  <span className="gallery-card__title">{item.title}</span>
-                </div>
-              </div>
-            </div>
+            <ImageGalleryCard key={item.id} item={item} index={index} onClick={setLightbox} />
           )
         )}
       </div>

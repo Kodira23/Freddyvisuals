@@ -32,7 +32,7 @@ function isVideoItem(item) {
   return false;
 }
 
-// ── Scroll reveal hook ───────────────────────────────────────
+// ── Scroll reveal hook — slides in from right ────────────────
 function useScrollReveal(delay = 0) {
   const ref = useRef(null);
   const [visible, setVisible] = useState(false);
@@ -47,7 +47,7 @@ function useScrollReveal(delay = 0) {
           obs.disconnect();
         }
       },
-      { threshold: 0.08, rootMargin: '0px 0px -40px 0px' }
+      { threshold: 0.05, rootMargin: '0px 0px -20px 0px' }
     );
     obs.observe(el);
     return () => obs.disconnect();
@@ -56,14 +56,13 @@ function useScrollReveal(delay = 0) {
   return [ref, visible];
 }
 
-// ── Image card with reveal ───────────────────────────────────
+// ── Image card ───────────────────────────────────────────────
 function ImageGalleryCard({ item, index, onClick }) {
-  const [ref, visible] = useScrollReveal((index % 3) * 80);
+  const [ref, visible] = useScrollReveal((index % 3) * 60);
   return (
     <div
       ref={ref}
       className={`gallery-card gallery-card--reveal${visible ? ' gallery-card--visible' : ''}`}
-      style={{ '--i': index }}
       onClick={() => onClick(item)}
     >
       <img src={item.image_url} alt={item.title} loading="lazy" />
@@ -78,9 +77,9 @@ function ImageGalleryCard({ item, index, onClick }) {
   );
 }
 
-// ── Video card with reveal + autoplay-on-scroll ──────────────
+// ── Video card ───────────────────────────────────────────────
 function VideoGalleryCard({ item, index, onClick }) {
-  const [ref, visible] = useScrollReveal((index % 3) * 80);
+  const [ref, visible] = useScrollReveal((index % 3) * 60);
   const videoRef = useRef(null);
   const [muted, setMuted] = useState(true);
 
@@ -102,7 +101,6 @@ function VideoGalleryCard({ item, index, onClick }) {
     <div
       ref={ref}
       className={`gallery-card gallery-card--video gallery-card--reveal${visible ? ' gallery-card--visible' : ''}`}
-      style={{ '--i': index }}
       onClick={() => onClick(item)}
     >
       <video

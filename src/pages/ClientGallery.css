@@ -63,7 +63,7 @@
 .client-access-help { margin-top: 2rem; font-size: 0.75rem; color: var(--muted); }
 
 /* ============================================================
-   GALLERY HEADER / STATS
+   GALLERY PAGE HEADER / STATS
    ============================================================ */
 .client-gallery-page { padding-top: var(--nav-height); }
 .client-gallery-header {
@@ -109,8 +109,7 @@
 }
 
 /* ============================================================
-   PHOTO / VIDEO CARD
-   Default: hidden, offset to the right → slides in when visible
+   PHOTO / VIDEO CARD — starts hidden + offset right, slides in
    ============================================================ */
 .client-photo {
   break-inside: avoid;
@@ -118,25 +117,23 @@
   position: relative;
   cursor: pointer;
   overflow: hidden;
-  background: #111; /* prevents blank white flash */
+  background: #0d0d0d;
 
-  /* hidden state */
+  /* hidden, pushed right */
   opacity: 0;
   transform: translateX(60px);
 
-  /* staggered spring transition */
+  /* staggered spring — cap stagger at 10 items to avoid huge delays */
   transition:
-    opacity  0.55s cubic-bezier(0.22, 1, 0.36, 1) calc((var(--i, 0) % 10) * 40ms),
+    opacity   0.55s cubic-bezier(0.22, 1, 0.36, 1) calc((var(--i, 0) % 10) * 40ms),
     transform 0.55s cubic-bezier(0.22, 1, 0.36, 1) calc((var(--i, 0) % 10) * 40ms);
 }
-
-/* visible state */
 .client-photo--visible {
   opacity: 1;
   transform: translateX(0);
 }
 
-/* ── image ── */
+/* ── Image ── */
 .client-photo img {
   width: 100%;
   display: block;
@@ -144,14 +141,14 @@
 }
 .client-photo:hover img { transform: scale(1.04); }
 
-/* ── video ──
-   IMPORTANT: no fixed height — let the video's natural aspect ratio
-   determine the card height, same as images do */
+/* ── Video ──
+   width:100% + display:block mirrors exactly how Home.jsx renders
+   niche-card videos — this is the working pattern */
 .client-photo video {
   width: 100%;
-  display: block;           /* removes inline gap */
+  display: block;
   object-fit: cover;
-  background: #0a0a0a;
+  background: #0d0d0d;
   transition: transform 0.4s;
 }
 .client-photo:hover video { transform: scale(1.04); }
@@ -198,7 +195,7 @@
   cursor: pointer;
   backdrop-filter: blur(4px);
   color: #fff;
-  opacity: 0.75;
+  opacity: 0.8;
   transition: opacity 0.2s, background 0.2s;
 }
 .client-photo__mute:hover { opacity: 1; background: rgba(0,0,0,0.9); }
@@ -222,24 +219,6 @@
   color: #fff;
   z-index: 20;
   pointer-events: none;
-}
-
-/* ============================================================
-   VIDEO ERROR STATE
-   ============================================================ */
-.client-photo__video-error {
-  min-height: 140px;
-  width: 100%;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  background: #111;
-  color: rgba(255,255,255,0.6);
-  gap: 0.4rem;
-  text-align: center;
-  padding: 1.5rem 1rem;
-  font-size: 0.78rem;
 }
 
 /* ============================================================
@@ -317,17 +296,14 @@
     column-gap: 0.35rem;
     padding: 0 0.75rem 4rem;
   }
-  /* More dramatic slide on phones */
+  /* Stronger slide-in on phones */
   .client-photo {
     transform: translateX(85px);
     transition:
-      opacity  0.6s cubic-bezier(0.22, 1, 0.36, 1) calc((var(--i, 0) % 8) * 45ms),
+      opacity   0.6s cubic-bezier(0.22, 1, 0.36, 1) calc((var(--i, 0) % 8) * 45ms),
       transform 0.6s cubic-bezier(0.22, 1, 0.36, 1) calc((var(--i, 0) % 8) * 45ms);
   }
-  .client-photo--visible {
-    opacity: 1;
-    transform: translateX(0);
-  }
+  .client-photo--visible { opacity: 1; transform: translateX(0); }
   .lightbox__nav--prev { left: 0.25rem; }
   .lightbox__nav--next { right: 0.25rem; }
 }

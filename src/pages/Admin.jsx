@@ -10,7 +10,7 @@ import {
 } from 'lucide-react';
 import './Admin.css';
 
-const ADMIN_PASSWORD = 'Masabare';
+const ADMIN_PASSWORD = 'Masira043';
 const BUCKET_GALLERY  = 'gallery';
 const BUCKET_CLIENTS  = 'client-photos';
 const BUCKET_SERVICES = 'service-covers';
@@ -246,8 +246,7 @@ export default function Admin() {
           {pwdErr && <p className="adm-err"><AlertCircle size={13} /> {pwdErr}</p>}
           <button type="submit" className="adm-btn-primary">Enter Dashboard</button>
         </form>
-        <p className="adm-hint">Default: <code>freddievisuals2024</code> — change in Admin.jsx line 14</p>
-      </div>
+        </div>
     </div>
   );
 

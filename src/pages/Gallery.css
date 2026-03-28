@@ -30,11 +30,13 @@
 }
 .gallery-filter:hover { border-color: var(--gold); color: var(--gold); }
 .gallery-filter--active { background: var(--gold); color: var(--black); border-color: var(--gold); }
+
 .gallery-grid {
   columns: 3;
   gap: 0.75rem;
   margin-bottom: 6rem;
 }
+
 .gallery-card {
   break-inside: avoid;
   margin-bottom: 0.75rem;
@@ -43,19 +45,21 @@
   cursor: pointer;
 }
 
-/* ── Scroll reveal ──────────────────────────────────────────── */
+/* ── Slide in from right ────────────────────────────────────── */
 .gallery-card--reveal {
   opacity: 0;
-  transform: translateY(40px);
-  transition: opacity 0.65s ease, transform 0.65s ease;
+  transform: translateX(60px);
+  transition: opacity 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94),
+              transform 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 }
 .gallery-card--visible {
   opacity: 1;
-  transform: translateY(0);
+  transform: translateX(0);
 }
 
 .gallery-card img { width: 100%; display: block; transition: transform 0.5s ease; }
 .gallery-card:hover img { transform: scale(1.04); }
+
 .gallery-card__info {
   position: absolute;
   inset: 0;
@@ -68,6 +72,7 @@
   padding: 1.25rem;
 }
 .gallery-card:hover .gallery-card__info { opacity: 1; }
+
 .gallery-card__cat {
   font-size: 0.6rem;
   letter-spacing: 0.2em;
@@ -125,7 +130,7 @@
   text-transform: uppercase;
 }
 
-/* Lightbox */
+/* ── Lightbox ───────────────────────────────────────────────── */
 .lightbox {
   position: fixed;
   inset: 0;
@@ -168,7 +173,7 @@
   color: var(--white);
 }
 
-/* Filter count badge */
+/* ── Filter count badge ─────────────────────────────────────── */
 .gallery-filter__count {
   display: inline-flex;
   align-items: center;

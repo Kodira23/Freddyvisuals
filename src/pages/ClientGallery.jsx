@@ -3,35 +3,53 @@ import { Lock, Download, Eye, LogOut, Image, Play, Volume2, VolumeX } from 'luci
 import { supabase } from '../lib/supabase';
 import './ClientGallery.css';
 
-// ── Is this entry a video? ────────────────────────────────────
-// Checks 3 things in order:
-// 1. media_type column (most reliable — set this in your DB!)
-// 2. URL contains a video extension anywhere (before OR after query params)
-// 3. URL path contains "video" keyword (Supabase bucket named "videos" etc.)
-function isVideo(photo) {
-  if (!photo) return false;
-
-  // 1. Explicit media_type column — add this to your client_photos table
-  if (photo.media_type) {
-    return photo.media_type.startsWith('video');
-  }
-
-  // 2. Extension anywhere in the URL (handles no-extension filenames by checking the full string)
-  const url = (photo.image_url || '').toLowerCase();
-  if (/\.(mp4|mov|avi|webm|mkv|m4v|wmv|flv|3gp)/.test(url)) return true;
-
-  // 3. Supabase bucket/folder named "video" or "videos"
-  if (/\/video[s]?\//i.test(url)) return true;
-
-  // 4. file_type column (another common column name)
-  if (photo.file_type) {
-    return photo.file_type.startsWith('video') || /mp4|mov|webm|avi/i.test(photo.file_type);
-  }
-
+// ── Quick sync check (extension / media_type column) ─────────
+function looksLikeVideo(photo) {
+  if (!photo?.image_url) return false;
+  // 1. Explicit DB column
+  if (photo.media_type?.startsWith('video')) return true;
+  if (photo.file_type && /mp4|mov|webm|avi|mkv/i.test(photo.file_type)) return true;
+  // 2. Extension anywhere in URL
+  if (/\.(mp4|mov|avi|webm|mkv|m4v|wmv|flv|3gp)/i.test(photo.image_url)) return true;
   return false;
 }
 
-// ── Scroll reveal: slides card in from right ─────────────────
+// ── HEAD request: ask the server what content-type the file is ─
+// This is the only reliable way when the URL has no extension
+async function fetchMediaType(url) {
+  try {
+    const res = await fetch(url, { method: 'HEAD' });
+    return res.headers.get('content-type') || '';
+  } catch {
+    return '';
+  }
+}
+
+// ── Enrich photos: for any without a clear type, do a HEAD req ─
+async function enrichPhotos(photos) {
+  return Promise.all(
+    photos.map(async (p) => {
+      if (looksLikeVideo(p) || p._typeChecked) return p;
+      // Already known to be image if URL contains image extension
+      if (/\.(jpe?g|png|gif|webp|avif|bmp|svg)/i.test(p.image_url)) {
+        return { ...p, _mediaType: 'image', _typeChecked: true };
+      }
+      // Unknown — do a HEAD request
+      const ct = await fetchMediaType(p.image_url);
+      return { ...p, _mediaType: ct, _typeChecked: true };
+    })
+  );
+}
+
+// ── Final decision after enrichment ─────────────────────────
+function isVideo(photo) {
+  if (!photo) return false;
+  if (looksLikeVideo(photo)) return true;
+  if (photo._mediaType?.startsWith('video')) return true;
+  return false;
+}
+
+// ── Scroll reveal ─────────────────────────────────────────────
 function useScrollReveal() {
   const ref = useRef(null);
   const [visible, setVisible] = useState(false);
@@ -55,7 +73,6 @@ function VideoCard({ photo, index, onClick }) {
   const [visible, setVisible] = useState(false);
   const [muted, setMuted] = useState(true);
 
-  // Scroll reveal
   useEffect(() => {
     const el = cardRef.current;
     if (!el) return;
@@ -67,7 +84,6 @@ function VideoCard({ photo, index, onClick }) {
     return () => obs.disconnect();
   }, []);
 
-  // Autoplay / pause on scroll
   useEffect(() => {
     const el = videoRef.current;
     if (!el) return;
@@ -98,7 +114,6 @@ function VideoCard({ photo, index, onClick }) {
         playsInline
         preload="metadata"
       />
-
       <button
         className="client-photo__mute"
         onClick={e => { e.stopPropagation(); setMuted(m => !m); }}
@@ -106,12 +121,10 @@ function VideoCard({ photo, index, onClick }) {
       >
         {muted ? <VolumeX size={13} /> : <Volume2 size={13} />}
       </button>
-
       <div className="client-photo__overlay client-photo__overlay--video">
         <Play size={22} />
         {photo.caption && <span>{photo.caption}</span>}
       </div>
-
       <div className="client-photo__vid-badge">
         <Play size={9} fill="currentColor" /> Video
       </div>
@@ -168,33 +181,40 @@ export default function ClientGallery() {
     e.preventDefault();
     setError('');
     setLoading(true);
+
     const { data: gal, error: galErr } = await supabase
       .from('client_galleries')
       .select('*')
       .eq('access_code', code.trim())
       .single();
+
     if (galErr || !gal) {
       setError('Invalid access code. Please check your code and try again, or contact Freddie Visuals.');
       setLoading(false);
       return;
     }
+
     const { data: pics } = await supabase
       .from('client_photos')
       .select('*')
       .eq('gallery_id', gal.id)
       .order('created_at');
 
-    // ── DEBUG: log every photo row to console so you can see the real URL
-    console.table((pics || []).map(p => ({
+    const raw = pics || [];
+
+    // HEAD-request enrichment for files with no detectable extension
+    const enriched = await enrichPhotos(raw);
+
+    // Debug log — open DevTools console to see this
+    console.table(enriched.map(p => ({
       id: p.id,
-      image_url: p.image_url,
-      media_type: p.media_type,
-      file_type: p.file_type,
-      detected_as: isVideo(p) ? 'VIDEO' : 'IMAGE',
+      url: p.image_url,
+      _mediaType: p._mediaType,
+      isVideo: isVideo(p),
     })));
 
     setGallery(gal);
-    setPhotos(pics || []);
+    setPhotos(enriched);
     setLoading(false);
   }
 

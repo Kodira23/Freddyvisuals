@@ -6,13 +6,12 @@ import './ClientGallery.css';
 // Enhanced video URL detection
 function isVideoUrl(url) {
   if (!url) return false;
-  // Check file extension
   if (/\.(mp4|mov|avi|webm|mkv|m4v|wmv|flv|3gp)(\?.*)?$/i.test(url)) return true;
-  // Check for common video keywords in URL
   if (url.includes('video') || url.includes('mp4') || url.includes('mov')) return true;
   return false;
 }
 
+// Scroll reveal: slides in from the right
 function useScrollReveal(options = {}) {
   const ref = useRef(null);
   const [visible, setVisible] = useState(false);
@@ -20,8 +19,13 @@ function useScrollReveal(options = {}) {
     const el = ref.current;
     if (!el) return;
     const obs = new IntersectionObserver(
-      ([entry]) => { if (entry.isIntersecting) { setVisible(true); obs.disconnect(); } },
-      { threshold: 0.12, ...options }
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setVisible(true);
+          obs.disconnect();
+        }
+      },
+      { threshold: 0.08, rootMargin: '0px 0px -40px 0px', ...options }
     );
     obs.observe(el);
     return () => obs.disconnect();
@@ -29,6 +33,7 @@ function useScrollReveal(options = {}) {
   return [ref, visible];
 }
 
+// Autoplay video when scrolled into view, pause when scrolled out
 function useVideoAutoplay(videoRef) {
   useEffect(() => {
     const el = videoRef.current;
@@ -41,7 +46,7 @@ function useVideoAutoplay(videoRef) {
           el.pause();
         }
       },
-      { threshold: 0.5 }
+      { threshold: 0.4 }
     );
     obs.observe(el);
     return () => obs.disconnect();
@@ -54,14 +59,45 @@ function VideoCard({ photo, index, onClick }) {
   useVideoAutoplay(videoRef);
   const [muted, setMuted] = useState(true);
   const [error, setError] = useState(false);
-  const [manuallyPlaying, setManuallyPlaying] = useState(false);
 
   function setRefs(el) {
-    revealRef.current = el;
-    videoRef.current = el;
+    revealRef.current = el?.querySelector('video') || null;
+    // We need a separate ref for the card div for reveal
   }
 
-  const posterUrl = photo.thumbnail_url || '/video-poster-placeholder.jpg';
+  const cardRef = useRef(null);
+  const [cardVisible, setCardVisible] = useState(false);
+
+  useEffect(() => {
+    const el = cardRef.current;
+    if (!el) return;
+    const obs = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) { setCardVisible(true); obs.disconnect(); }
+      },
+      { threshold: 0.08, rootMargin: '0px 0px -40px 0px' }
+    );
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, []);
+
+  // Video autoplay via videoRef
+  useEffect(() => {
+    const el = videoRef.current;
+    if (!el) return;
+    const obs = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          el.play().catch(err => console.warn('Autoplay blocked:', err));
+        } else {
+          el.pause();
+        }
+      },
+      { threshold: 0.4 }
+    );
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, []);
 
   const handleVideoError = () => {
     setError(true);
@@ -71,26 +107,22 @@ function VideoCard({ photo, index, onClick }) {
   const handleManualPlay = (e) => {
     e.stopPropagation();
     if (videoRef.current) {
-      videoRef.current.play().then(() => {
-        setManuallyPlaying(true);
-        setError(false);
-      }).catch(err => {
-        console.error('Manual play failed:', err);
-      });
+      videoRef.current.play().then(() => setError(false)).catch(console.error);
     }
   };
 
   return (
     <div
-      className={`client-photo client-photo--video${visible ? ' client-photo--visible' : ''}`}
+      ref={cardRef}
+      className={`client-photo client-photo--video${cardVisible ? ' client-photo--visible' : ''}`}
       style={{ '--i': index }}
       onClick={() => onClick(photo)}
     >
       {!error ? (
         <video
-          ref={setRefs}
+          ref={videoRef}
           src={photo.image_url}
-          poster={posterUrl}
+          poster={photo.thumbnail_url || ''}
           muted={muted}
           loop
           playsInline
@@ -248,7 +280,7 @@ export default function ClientGallery() {
           <div className="lightbox" onClick={() => setLightbox(null)}>
             <div className="lightbox__inner" onClick={e => e.stopPropagation()}>
               {isVideoUrl(lightbox.image_url)
-                ? <LightboxVideo src={lightbox.image_url} poster={lightbox.thumbnail_url || '/video-poster-placeholder.jpg'} />
+                ? <LightboxVideo src={lightbox.image_url} poster={lightbox.thumbnail_url || ''} />
                 : <img src={lightbox.image_url} alt={lightbox.caption || ''} />
               }
               <div className="lightbox__meta">

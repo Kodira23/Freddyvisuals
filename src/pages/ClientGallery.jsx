@@ -3,12 +3,35 @@ import { Lock, Download, Eye, LogOut, Image, Play, Volume2, VolumeX } from 'luci
 import { supabase } from '../lib/supabase';
 import './ClientGallery.css';
 
-// ── EXACT same function that works in Home.jsx ───────────────
-function isVideoUrl(url) {
-  return /\.(mp4|mov|avi|webm|mkv|m4v|wmv|flv|3gp)(\?.*)?$/i.test(url || '');
+// ── Is this entry a video? ────────────────────────────────────
+// Checks 3 things in order:
+// 1. media_type column (most reliable — set this in your DB!)
+// 2. URL contains a video extension anywhere (before OR after query params)
+// 3. URL path contains "video" keyword (Supabase bucket named "videos" etc.)
+function isVideo(photo) {
+  if (!photo) return false;
+
+  // 1. Explicit media_type column — add this to your client_photos table
+  if (photo.media_type) {
+    return photo.media_type.startsWith('video');
+  }
+
+  // 2. Extension anywhere in the URL (handles no-extension filenames by checking the full string)
+  const url = (photo.image_url || '').toLowerCase();
+  if (/\.(mp4|mov|avi|webm|mkv|m4v|wmv|flv|3gp)/.test(url)) return true;
+
+  // 3. Supabase bucket/folder named "video" or "videos"
+  if (/\/video[s]?\//i.test(url)) return true;
+
+  // 4. file_type column (another common column name)
+  if (photo.file_type) {
+    return photo.file_type.startsWith('video') || /mp4|mov|webm|avi/i.test(photo.file_type);
+  }
+
+  return false;
 }
 
-// ── Scroll reveal: slides card in from the right ─────────────
+// ── Scroll reveal: slides card in from right ─────────────────
 function useScrollReveal() {
   const ref = useRef(null);
   const [visible, setVisible] = useState(false);
@@ -16,9 +39,7 @@ function useScrollReveal() {
     const el = ref.current;
     if (!el) return;
     const obs = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) { setVisible(true); obs.disconnect(); }
-      },
+      ([entry]) => { if (entry.isIntersecting) { setVisible(true); obs.disconnect(); } },
       { threshold: 0.08, rootMargin: '0px 0px -30px 0px' }
     );
     obs.observe(el);
@@ -34,31 +55,26 @@ function VideoCard({ photo, index, onClick }) {
   const [visible, setVisible] = useState(false);
   const [muted, setMuted] = useState(true);
 
-  // Card scroll-reveal (slide from right)
+  // Scroll reveal
   useEffect(() => {
     const el = cardRef.current;
     if (!el) return;
     const obs = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) { setVisible(true); obs.disconnect(); }
-      },
+      ([entry]) => { if (entry.isIntersecting) { setVisible(true); obs.disconnect(); } },
       { threshold: 0.08, rootMargin: '0px 0px -30px 0px' }
     );
     obs.observe(el);
     return () => obs.disconnect();
   }, []);
 
-  // Autoplay / pause based on viewport — same approach as Home.jsx niche card
+  // Autoplay / pause on scroll
   useEffect(() => {
     const el = videoRef.current;
     if (!el) return;
     const obs = new IntersectionObserver(
       ([entry]) => {
-        if (entry.isIntersecting) {
-          el.play().catch(() => {});
-        } else {
-          el.pause();
-        }
+        if (entry.isIntersecting) { el.play().catch(() => {}); }
+        else { el.pause(); }
       },
       { threshold: 0.4 }
     );
@@ -73,10 +89,6 @@ function VideoCard({ photo, index, onClick }) {
       style={{ '--i': index }}
       onClick={() => onClick(photo)}
     >
-      {/* 
-        Render exactly like Home.jsx niche-card video:
-        src, autoPlay, muted, loop, playsInline — no poster that could 404 
-      */}
       <video
         ref={videoRef}
         src={photo.image_url}
@@ -87,7 +99,6 @@ function VideoCard({ photo, index, onClick }) {
         preload="metadata"
       />
 
-      {/* Mute toggle */}
       <button
         className="client-photo__mute"
         onClick={e => { e.stopPropagation(); setMuted(m => !m); }}
@@ -172,6 +183,16 @@ export default function ClientGallery() {
       .select('*')
       .eq('gallery_id', gal.id)
       .order('created_at');
+
+    // ── DEBUG: log every photo row to console so you can see the real URL
+    console.table((pics || []).map(p => ({
+      id: p.id,
+      image_url: p.image_url,
+      media_type: p.media_type,
+      file_type: p.file_type,
+      detected_as: isVideo(p) ? 'VIDEO' : 'IMAGE',
+    })));
+
     setGallery(gal);
     setPhotos(pics || []);
     setLoading(false);
@@ -236,18 +257,17 @@ export default function ClientGallery() {
         ) : (
           <div className="client-gallery-grid container">
             {photos.map((photo, i) =>
-              isVideoUrl(photo.image_url)
+              isVideo(photo)
                 ? <VideoCard key={photo.id} photo={photo} index={i} onClick={openLightbox} />
                 : <ImageCard key={photo.id} photo={photo} index={i} onClick={openLightbox} />
             )}
           </div>
         )}
 
-        {/* Lightbox */}
         {lightbox && (
           <div className="lightbox" onClick={() => setLightbox(null)}>
             <div className="lightbox__inner" onClick={e => e.stopPropagation()}>
-              {isVideoUrl(lightbox.image_url)
+              {isVideo(lightbox)
                 ? <LightboxVideo src={lightbox.image_url} />
                 : <img src={lightbox.image_url} alt={lightbox.caption || ''} />
               }
@@ -256,7 +276,7 @@ export default function ClientGallery() {
                   <span className="lightbox__counter">{lbIndex + 1} / {photos.length}</span>
                   <span className="lightbox__caption">{lightbox.caption || 'Untitled'}</span>
                 </div>
-                {!isVideoUrl(lightbox.image_url) && (
+                {!isVideo(lightbox) && (
                   <a
                     href={lightbox.image_url}
                     download

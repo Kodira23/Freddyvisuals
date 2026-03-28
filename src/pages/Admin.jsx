@@ -10,7 +10,7 @@ import {
 } from 'lucide-react';
 import './Admin.css';
 
-const ADMIN_PASSWORD = 'Masira043';
+const ADMIN_PASSWORD = 'Masabare';
 const BUCKET_GALLERY  = 'gallery';
 const BUCKET_CLIENTS  = 'client-photos';
 const BUCKET_SERVICES = 'service-covers';

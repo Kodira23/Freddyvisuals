@@ -25,11 +25,11 @@
 .hero__bg--active { opacity: 1; }
 .hero__bg img { width: 100%; height: 100%; object-fit: cover; object-position: center top; }
 
-/* White card panel – background changed to white */
+/* White card panel */
 .hero__card {
   position: relative;
   z-index: 3;
-  background: #ffffff;                     /* ← changed to white */
+  background: #ffffff;
   width: clamp(320px, 42vw, 580px);
   margin: auto 0 calc(8vh + 20px) 5vw;
   padding: calc(clamp(3rem, 5vw, 5.5rem) + 20px) calc(clamp(2.5rem, 4vw, 5rem) + 20px);
@@ -80,13 +80,12 @@
   flex-wrap: wrap;
 }
 
-/* Buttons inside hero card – now with white background */
 .hero__card-actions .btn-dark {
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
   padding: 0.75rem 1.75rem;
-  background: #ffffff;                     /* ← white background */
+  background: #ffffff;
   color: #0a0a0a;
   font-size: 0.68rem;
   letter-spacing: 0.15em;
@@ -97,7 +96,7 @@
 }
 .hero__card-actions .btn-dark:hover {
   background: #0a0a0a;
-  color: #ffffff;                          /* ← white text on hover */
+  color: #ffffff;
 }
 
 .hero__card-actions .btn-outline-dark {
@@ -105,13 +104,13 @@
   align-items: center;
   gap: 0.5rem;
   padding: 0.75rem 1.75rem;
-  background: #ffffff;                     /* ← white background */
+  background: #ffffff;
   color: #0a0a0a;
   font-size: 0.68rem;
   letter-spacing: 0.15em;
   text-transform: uppercase;
   text-decoration: none;
-  border: 1px solid #0a0a0a;               /* ← solid black border */
+  border: 1px solid #0a0a0a;
   transition: background 0.25s, color 0.25s, border-color 0.25s;
 }
 .hero__card-actions .btn-outline-dark:hover {
@@ -434,17 +433,14 @@
     max-height: 650px;
     flex-shrink: 0;
   }
-  .hero__bg {
-    position: absolute;
-    inset: 0;
-  }
+  .hero__bg { position: absolute; inset: 0; }
   .hero__card {
     position: relative;
     z-index: 3;
     width: 100%;
     margin: 0;
     padding: 3rem 2rem 3.5rem;
-    background: #ffffff;                    /* ← white on mobile as well */
+    background: #ffffff;
     box-shadow: none;
     text-align: center;
     align-items: center;
@@ -453,26 +449,13 @@
   .hero__card-title { color: #0a0a0a; }
   .hero__card-divider { background: rgba(0,0,0,0.3); }
   .hero__card-sub { color: rgba(0,0,0,0.55); }
-  .hero__card-actions {
-    justify-content: center;
-  }
-  /* Ensure buttons remain white on mobile */
+  .hero__card-actions { justify-content: center; }
   .hero__card-actions .btn-dark,
-  .hero__card-actions .btn-outline-dark {
-    background: #ffffff;
-    color: #0a0a0a;
-  }
-  .hero__card-actions .btn-dark {
-    border: 1.5px solid #0a0a0a;
-  }
-  .hero__card-actions .btn-outline-dark {
-    border: 1px solid #0a0a0a;
-  }
+  .hero__card-actions .btn-outline-dark { background: #ffffff; color: #0a0a0a; }
+  .hero__card-actions .btn-dark { border: 1.5px solid #0a0a0a; }
+  .hero__card-actions .btn-outline-dark { border: 1px solid #0a0a0a; }
   .hero__card-actions .btn-dark:hover,
-  .hero__card-actions .btn-outline-dark:hover {
-    background: #0a0a0a;
-    color: #ffffff;
-  }
+  .hero__card-actions .btn-outline-dark:hover { background: #0a0a0a; color: #ffffff; }
 
   .stats__grid { grid-template-columns: repeat(2, 1fr); }
   .stat { border-bottom: 1px solid var(--border); }
@@ -493,29 +476,16 @@
   .hero__card-title { font-size: 2.2rem; }
   .hero__card-divider { margin: 0 auto 1.5rem; }
 }
-/* Video thumbnail in gallery preview */
+
+/* ── Video in gallery preview ── */
 .gallery-preview__video {
   width: 100%;
   height: 100%;
   object-fit: cover;
   display: block;
 }
-
-.gallery-preview__item {
-  position: relative;
-  overflow: hidden;
-  cursor: pointer;
-}
-
-/* Optional: Add a subtle overlay for video cards to indicate they are videos */
-.gallery-preview__item video {
-  transition: transform 0.3s ease;
-}
-.gallery-preview__item:hover video {
-  transform: scale(1.02);
-}
-
-/* If you want to show a play icon overlay on video items */
+.gallery-preview__item video { transition: transform 0.3s ease; }
+.gallery-preview__item:hover video { transform: scale(1.02); }
 .gallery-preview__item.video-item::after {
   content: '';
   position: absolute;
@@ -527,4 +497,21 @@
   background: rgba(0,0,0,0.6);
   border-radius: 50%;
   pointer-events: none;
+}
+
+/* ── Scroll reveal — slide in from right ───────────────────── */
+.reveal-item {
+  opacity: 0;
+  transform: translateX(60px);
+  transition: opacity 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94),
+              transform 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+.reveal-item--visible {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+/* Prevent reveal wrapper from breaking grid/flex children */
+.reveal-item.gallery-preview__item {
+  display: contents;
 }

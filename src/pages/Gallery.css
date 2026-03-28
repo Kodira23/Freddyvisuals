@@ -42,6 +42,18 @@
   overflow: hidden;
   cursor: pointer;
 }
+
+/* ── Scroll reveal ──────────────────────────────────────────── */
+.gallery-card--reveal {
+  opacity: 0;
+  transform: translateY(40px);
+  transition: opacity 0.65s ease, transform 0.65s ease;
+}
+.gallery-card--visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
 .gallery-card img { width: 100%; display: block; transition: transform 0.5s ease; }
 .gallery-card:hover img { transform: scale(1.04); }
 .gallery-card__info {
@@ -51,8 +63,8 @@
   opacity: 0;
   transition: opacity 0.4s;
   display: flex;
-  flex-direction: column;
-  justify-content: flex-end;
+  align-items: flex-end;
+  justify-content: space-between;
   padding: 1.25rem;
 }
 .gallery-card:hover .gallery-card__info { opacity: 1; }
@@ -67,69 +79,7 @@
   font-size: 1.3rem;
   color: var(--white);
 }
-/* Lightbox */
-.lightbox {
-  position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,0.93);
-  z-index: 200;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 2rem;
-}
-.lightbox__close {
-  position: absolute;
-  top: 1.5rem;
-  right: 1.5rem;
-  background: none;
-  border: 1px solid var(--border);
-  color: var(--white);
-  width: 44px;
-  height: 44px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: 0.3s;
-}
-.lightbox__close:hover { border-color: var(--gold); color: var(--gold); }
-.lightbox__inner { max-width: 900px; width: 100%; }
-.lightbox__inner img { max-height: 80vh; width: 100%; object-fit: contain; }
-.lightbox__meta { padding: 1rem 0 0; }
-.lightbox__cat {
-  font-size: 0.6rem;
-  letter-spacing: 0.2em;
-  text-transform: uppercase;
-  color: var(--gold);
-}
-.lightbox__title {
-  font-family: 'Cormorant Garamond', serif;
-  font-size: 1.8rem;
-  font-weight: 300;
-  color: var(--white);
-}
-@media (max-width: 768px) {
-  .gallery-grid { columns: 2; }
-}
-@media (max-width: 480px) {
-  .gallery-grid { columns: 1; }
-}
-.gallery-filter__count {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 18px;
-  height: 18px;
-  background: var(--border);
-  border-radius: 50%;
-  font-size: 0.55rem;
-  margin-left: 0.4rem;
-  color: var(--mid);
-}
-.gallery-filter--active .gallery-filter__count { background: rgba(0,0,0,0.3); color: var(--black); }
 .gallery-card__zoom { color: var(--gold); flex-shrink: 0; }
-.gallery-card__info { display: flex; align-items: flex-end; justify-content: space-between; }
 
 /* ── Video card ─────────────────────────────────────────────── */
 .gallery-card--video video {
@@ -173,4 +123,69 @@
   z-index: 3;
   letter-spacing: 0.08em;
   text-transform: uppercase;
+}
+
+/* Lightbox */
+.lightbox {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.93);
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+}
+.lightbox__close {
+  position: absolute;
+  top: 1.5rem;
+  right: 1.5rem;
+  background: none;
+  border: 1px solid var(--border);
+  color: var(--white);
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: 0.3s;
+}
+.lightbox__close:hover { border-color: var(--gold); color: var(--gold); }
+.lightbox__inner { max-width: 900px; width: 100%; }
+.lightbox__inner img { max-height: 80vh; width: 100%; object-fit: contain; }
+.lightbox__meta { padding: 1rem 0 0; }
+.lightbox__cat {
+  font-size: 0.6rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--gold);
+}
+.lightbox__title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.8rem;
+  font-weight: 300;
+  color: var(--white);
+}
+
+/* Filter count badge */
+.gallery-filter__count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  background: var(--border);
+  border-radius: 50%;
+  font-size: 0.55rem;
+  margin-left: 0.4rem;
+  color: var(--mid);
+}
+.gallery-filter--active .gallery-filter__count { background: rgba(0,0,0,0.3); color: var(--black); }
+
+@media (max-width: 768px) {
+  .gallery-grid { columns: 2; }
+}
+@media (max-width: 480px) {
+  .gallery-grid { columns: 1; }
 }

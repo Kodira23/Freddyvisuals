@@ -67,7 +67,6 @@
   font-size: 1.3rem;
   color: var(--white);
 }
-
 /* Lightbox */
 .lightbox {
   position: fixed;
@@ -131,3 +130,47 @@
 .gallery-filter--active .gallery-filter__count { background: rgba(0,0,0,0.3); color: var(--black); }
 .gallery-card__zoom { color: var(--gold); flex-shrink: 0; }
 .gallery-card__info { display: flex; align-items: flex-end; justify-content: space-between; }
+
+/* ── Video card ─────────────────────────────────────────────── */
+.gallery-card--video video {
+  width: 100%;
+  display: block;
+  transition: transform 0.5s ease;
+}
+.gallery-card--video:hover video { transform: scale(1.04); }
+
+.gallery-card__mute {
+  position: absolute;
+  bottom: 0.5rem;
+  left: 0.5rem;
+  background: rgba(0,0,0,0.55);
+  border: none;
+  border-radius: 50%;
+  color: #fff;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 3;
+  transition: background 0.2s;
+}
+.gallery-card__mute:hover { background: rgba(0,0,0,0.85); }
+
+.gallery-card__vid-badge {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  background: rgba(0,0,0,0.6);
+  color: #fff;
+  font-size: 0.6rem;
+  padding: 0.2rem 0.4rem;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  z-index: 3;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}

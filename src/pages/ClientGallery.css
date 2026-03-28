@@ -26,36 +26,21 @@
   justify-content: center;
 }
 .client-access-icon {
-  width: 72px;
-  height: 72px;
+  width: 72px; height: 72px;
   border: 1px solid var(--border);
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  display: flex; align-items: center; justify-content: center;
   color: var(--gold);
   margin: 0 auto 2rem;
 }
-.client-access-sub {
-  font-size: 0.82rem;
-  color: var(--mid);
-  line-height: 1.8;
-  margin-bottom: 2.5rem;
-}
+.client-access-sub { font-size: 0.82rem; color: var(--mid); line-height: 1.8; margin-bottom: 2.5rem; }
 .client-access-form { display: flex; flex-direction: column; gap: 1rem; }
 .client-access-input-wrap { position: relative; }
 .client-access-input {
-  width: 100%;
-  padding: 1rem 1.25rem;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  color: var(--white);
-  font-family: var(--font-body);
-  font-size: 0.85rem;
-  letter-spacing: 0.2em;
-  text-align: center;
-  outline: none;
-  transition: border-color 0.3s;
-  box-sizing: border-box;
+  width: 100%; padding: 1rem 1.25rem;
+  background: var(--surface); border: 1px solid var(--border);
+  color: var(--white); font-family: var(--font-body);
+  font-size: 0.85rem; letter-spacing: 0.2em; text-align: center;
+  outline: none; transition: border-color 0.3s; box-sizing: border-box;
 }
 .client-access-input::placeholder { color: var(--muted); letter-spacing: 0.1em; }
 .client-access-input:focus { border-color: var(--gold); }
@@ -63,38 +48,24 @@
 .client-access-help { margin-top: 2rem; font-size: 0.75rem; color: var(--muted); }
 
 /* ============================================================
-   GALLERY PAGE HEADER / STATS
+   GALLERY HEADER / STATS
    ============================================================ */
 .client-gallery-page { padding-top: var(--nav-height); }
 .client-gallery-header {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  padding: 4rem 2rem 2rem;
-  flex-wrap: wrap;
-  gap: 1.5rem;
+  display: flex; align-items: flex-start; justify-content: space-between;
+  padding: 4rem 2rem 2rem; flex-wrap: wrap; gap: 1.5rem;
 }
 .client-gallery-event {
-  font-family: 'Cormorant Garamond', serif;
-  font-size: 1.3rem;
-  font-style: italic;
-  color: var(--gold-light);
-  margin-top: 0.5rem;
+  font-family: 'Cormorant Garamond', serif; font-size: 1.3rem;
+  font-style: italic; color: var(--gold-light); margin-top: 0.5rem;
 }
 .client-gallery-date {
-  font-size: 0.72rem;
-  letter-spacing: 0.15em;
-  text-transform: uppercase;
-  color: var(--mid);
-  margin-top: 0.5rem;
+  font-size: 0.72rem; letter-spacing: 0.15em;
+  text-transform: uppercase; color: var(--mid); margin-top: 0.5rem;
 }
 .client-gallery-stats {
-  padding: 0 2rem 1.5rem;
-  display: flex;
-  gap: 2rem;
-  font-size: 0.75rem;
-  color: var(--mid);
-  letter-spacing: 0.1em;
+  padding: 0 2rem 1.5rem; display: flex; gap: 2rem;
+  font-size: 0.75rem; color: var(--mid); letter-spacing: 0.1em;
 }
 .client-gallery-stats span { display: flex; align-items: center; gap: 0.4rem; }
 .client-gallery-empty { padding: 6rem 2rem; text-align: center; color: var(--mid); }
@@ -109,7 +80,7 @@
 }
 
 /* ============================================================
-   PHOTO / VIDEO CARD — starts hidden + offset right, slides in
+   PHOTO / VIDEO CARD — slide in from right on scroll
    ============================================================ */
 .client-photo {
   break-inside: avoid;
@@ -119,31 +90,19 @@
   overflow: hidden;
   background: #0d0d0d;
 
-  /* hidden, pushed right */
   opacity: 0;
   transform: translateX(60px);
-
-  /* staggered spring — cap stagger at 10 items to avoid huge delays */
   transition:
     opacity   0.55s cubic-bezier(0.22, 1, 0.36, 1) calc((var(--i, 0) % 10) * 40ms),
     transform 0.55s cubic-bezier(0.22, 1, 0.36, 1) calc((var(--i, 0) % 10) * 40ms);
 }
-.client-photo--visible {
-  opacity: 1;
-  transform: translateX(0);
-}
+.client-photo--visible { opacity: 1; transform: translateX(0); }
 
-/* ── Image ── */
-.client-photo img {
-  width: 100%;
-  display: block;
-  transition: transform 0.4s;
-}
+/* image */
+.client-photo img { width: 100%; display: block; transition: transform 0.4s; }
 .client-photo:hover img { transform: scale(1.04); }
 
-/* ── Video ──
-   width:100% + display:block mirrors exactly how Home.jsx renders
-   niche-card videos — this is the working pattern */
+/* video — display:block removes the inline gap that causes broken-img look */
 .client-photo video {
   width: 100%;
   display: block;
@@ -157,21 +116,11 @@
    HOVER OVERLAY
    ============================================================ */
 .client-photo__overlay {
-  position: absolute;
-  inset: 0;
-  background: rgba(0,0,0,0.45);
-  opacity: 0;
-  transition: opacity 0.3s;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-  color: var(--white);
-  font-size: 0.7rem;
-  padding: 1rem;
-  text-align: center;
-  pointer-events: none;
+  position: absolute; inset: 0;
+  background: rgba(0,0,0,0.45); opacity: 0; transition: opacity 0.3s;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 0.5rem; color: var(--white); font-size: 0.7rem;
+  padding: 1rem; text-align: center; pointer-events: none;
 }
 .client-photo:hover .client-photo__overlay { opacity: 1; }
 .client-photo__overlay--video { background: rgba(0,0,0,0.2); }
@@ -180,23 +129,12 @@
    MUTE BUTTON
    ============================================================ */
 .client-photo__mute {
-  position: absolute;
-  bottom: 0.75rem;
-  right: 0.75rem;
-  z-index: 20;
-  background: rgba(0,0,0,0.65);
-  border: none;
-  border-radius: 50%;
-  width: 30px;
-  height: 30px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  backdrop-filter: blur(4px);
-  color: #fff;
-  opacity: 0.8;
-  transition: opacity 0.2s, background 0.2s;
+  position: absolute; bottom: 0.75rem; right: 0.75rem; z-index: 20;
+  background: rgba(0,0,0,0.65); border: none; border-radius: 50%;
+  width: 30px; height: 30px;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; backdrop-filter: blur(4px); color: #fff;
+  opacity: 0.8; transition: opacity 0.2s, background 0.2s;
 }
 .client-photo__mute:hover { opacity: 1; background: rgba(0,0,0,0.9); }
 
@@ -204,80 +142,41 @@
    VIDEO BADGE
    ============================================================ */
 .client-photo__vid-badge {
-  position: absolute;
-  top: 0.6rem;
-  left: 0.6rem;
-  background: rgba(0,0,0,0.55);
-  backdrop-filter: blur(4px);
-  padding: 0.2rem 0.5rem;
-  border-radius: 20px;
-  font-size: 0.65rem;
-  font-weight: 500;
-  display: flex;
-  align-items: center;
-  gap: 0.25rem;
-  color: #fff;
-  z-index: 20;
-  pointer-events: none;
+  position: absolute; top: 0.6rem; left: 0.6rem;
+  background: rgba(0,0,0,0.55); backdrop-filter: blur(4px);
+  padding: 0.2rem 0.5rem; border-radius: 20px;
+  font-size: 0.65rem; font-weight: 500;
+  display: flex; align-items: center; gap: 0.25rem;
+  color: #fff; z-index: 20; pointer-events: none;
 }
 
 /* ============================================================
    LIGHTBOX
    ============================================================ */
 .lightbox {
-  position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,0.93);
-  z-index: 200;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 2rem;
+  position: fixed; inset: 0; background: rgba(0,0,0,0.93);
+  z-index: 200; display: flex; align-items: center; justify-content: center; padding: 2rem;
 }
 .lightbox__close {
-  position: absolute;
-  top: 1.5rem;
-  right: 1.5rem;
-  background: none;
-  border: 1px solid var(--border);
-  color: var(--white);
-  width: 44px;
-  height: 44px;
-  cursor: pointer;
-  font-size: 1rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: 0.3s;
+  position: absolute; top: 1.5rem; right: 1.5rem;
+  background: none; border: 1px solid var(--border); color: var(--white);
+  width: 44px; height: 44px; cursor: pointer; font-size: 1rem;
+  display: flex; align-items: center; justify-content: center; transition: 0.3s;
 }
 .lightbox__close:hover { border-color: var(--gold); color: var(--gold); }
 .lightbox__inner { max-width: 900px; width: 100%; }
 .lightbox__inner img { max-height: 80vh; width: 100%; object-fit: contain; }
 .lightbox__meta {
-  padding: 1rem 0 0;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
-  flex-wrap: wrap;
+  padding: 1rem 0 0; display: flex; align-items: center;
+  justify-content: space-between; gap: 1rem; flex-wrap: wrap;
 }
 .lightbox__counter { font-size: 0.7rem; color: var(--muted); letter-spacing: 0.1em; margin-right: 0.75rem; }
 .lightbox__caption { font-size: 0.8rem; color: var(--mid); }
 .lightbox__nav {
-  position: absolute;
-  top: 50%;
-  transform: translateY(-50%);
-  background: none;
-  border: 1px solid var(--border);
-  color: var(--white);
-  width: 48px;
-  height: 48px;
-  font-size: 1.6rem;
-  cursor: pointer;
-  transition: 0.3s;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  position: absolute; top: 50%; transform: translateY(-50%);
+  background: none; border: 1px solid var(--border); color: var(--white);
+  width: 48px; height: 48px; font-size: 1.6rem; cursor: pointer;
+  transition: 0.3s; display: flex; align-items: center; justify-content: center;
 }
 .lightbox__nav:hover { border-color: var(--gold); color: var(--gold); }
 .lightbox__nav--prev { left: 1rem; }
@@ -286,17 +185,10 @@
 /* ============================================================
    RESPONSIVE
    ============================================================ */
-@media (max-width: 900px) {
-  .client-gallery-grid { columns: 3; }
-}
+@media (max-width: 900px) { .client-gallery-grid { columns: 3; } }
 
 @media (max-width: 600px) {
-  .client-gallery-grid {
-    columns: 2;
-    column-gap: 0.35rem;
-    padding: 0 0.75rem 4rem;
-  }
-  /* Stronger slide-in on phones */
+  .client-gallery-grid { columns: 2; column-gap: 0.35rem; padding: 0 0.75rem 4rem; }
   .client-photo {
     transform: translateX(85px);
     transition:

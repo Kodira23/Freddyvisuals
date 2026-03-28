@@ -3,16 +3,16 @@ import { Lock, Download, Eye, LogOut, Image, Play, Volume2, VolumeX, AlertCircle
 import { supabase } from '../lib/supabase';
 import './ClientGallery.css';
 
-// Enhanced video URL detection
+// ── Video URL detection ──────────────────────────────────────
+// Strips query params first so ?token=... doesn't fool the check
 function isVideoUrl(url) {
   if (!url) return false;
-  if (/\.(mp4|mov|avi|webm|mkv|m4v|wmv|flv|3gp)(\?.*)?$/i.test(url)) return true;
-  if (url.includes('video') || url.includes('mp4') || url.includes('mov')) return true;
-  return false;
+  const clean = url.split('?')[0].toLowerCase();
+  return /\.(mp4|mov|avi|webm|mkv|m4v|wmv|flv|3gp)$/.test(clean);
 }
 
-// Scroll reveal: slides in from the right
-function useScrollReveal(options = {}) {
+// ── Scroll reveal hook: slides card in from the right ────────
+function useScrollReveal() {
   const ref = useRef(null);
   const [visible, setVisible] = useState(false);
   useEffect(() => {
@@ -20,12 +20,9 @@ function useScrollReveal(options = {}) {
     if (!el) return;
     const obs = new IntersectionObserver(
       ([entry]) => {
-        if (entry.isIntersecting) {
-          setVisible(true);
-          obs.disconnect();
-        }
+        if (entry.isIntersecting) { setVisible(true); obs.disconnect(); }
       },
-      { threshold: 0.08, rootMargin: '0px 0px -40px 0px', ...options }
+      { threshold: 0.08, rootMargin: '0px 0px -30px 0px' }
     );
     obs.observe(el);
     return () => obs.disconnect();
@@ -33,62 +30,36 @@ function useScrollReveal(options = {}) {
   return [ref, visible];
 }
 
-// Autoplay video when scrolled into view, pause when scrolled out
-function useVideoAutoplay(videoRef) {
-  useEffect(() => {
-    const el = videoRef.current;
-    if (!el) return;
-    const obs = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
-          el.play().catch(err => console.warn('Autoplay blocked:', err));
-        } else {
-          el.pause();
-        }
-      },
-      { threshold: 0.4 }
-    );
-    obs.observe(el);
-    return () => obs.disconnect();
-  }, [videoRef]);
-}
-
+// ── Video card ───────────────────────────────────────────────
 function VideoCard({ photo, index, onClick }) {
-  const [revealRef, visible] = useScrollReveal();
-  const videoRef = useRef(null);
-  useVideoAutoplay(videoRef);
-  const [muted, setMuted] = useState(true);
-  const [error, setError] = useState(false);
-
-  function setRefs(el) {
-    revealRef.current = el?.querySelector('video') || null;
-    // We need a separate ref for the card div for reveal
-  }
-
   const cardRef = useRef(null);
-  const [cardVisible, setCardVisible] = useState(false);
+  const videoRef = useRef(null);
+  const [visible, setVisible]     = useState(false);
+  const [muted, setMuted]         = useState(true);
+  const [loadError, setLoadError] = useState(false);
 
+  // Card scroll-reveal
   useEffect(() => {
     const el = cardRef.current;
     if (!el) return;
     const obs = new IntersectionObserver(
       ([entry]) => {
-        if (entry.isIntersecting) { setCardVisible(true); obs.disconnect(); }
+        if (entry.isIntersecting) { setVisible(true); obs.disconnect(); }
       },
-      { threshold: 0.08, rootMargin: '0px 0px -40px 0px' }
+      { threshold: 0.08, rootMargin: '0px 0px -30px 0px' }
     );
     obs.observe(el);
     return () => obs.disconnect();
   }, []);
 
-  // Video autoplay via videoRef
+  // Video autoplay / pause when in/out of viewport
   useEffect(() => {
     const el = videoRef.current;
-    if (!el) return;
+    if (!el || loadError) return;
     const obs = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting) {
-          el.play().catch(err => console.warn('Autoplay blocked:', err));
+          el.play().catch(() => {});
         } else {
           el.pause();
         }
@@ -97,57 +68,50 @@ function VideoCard({ photo, index, onClick }) {
     );
     obs.observe(el);
     return () => obs.disconnect();
-  }, []);
-
-  const handleVideoError = () => {
-    setError(true);
-    console.warn('Video failed to load:', photo.image_url);
-  };
-
-  const handleManualPlay = (e) => {
-    e.stopPropagation();
-    if (videoRef.current) {
-      videoRef.current.play().then(() => setError(false)).catch(console.error);
-    }
-  };
+  }, [loadError]);
 
   return (
     <div
       ref={cardRef}
-      className={`client-photo client-photo--video${cardVisible ? ' client-photo--visible' : ''}`}
+      className={`client-photo client-photo--video${visible ? ' client-photo--visible' : ''}`}
       style={{ '--i': index }}
-      onClick={() => onClick(photo)}
+      onClick={() => !loadError && onClick(photo)}
     >
-      {!error ? (
+      {loadError ? (
+        <div className="client-photo__video-error">
+          <AlertCircle size={20} />
+          <span>Video unavailable</span>
+          <small style={{ wordBreak: 'break-all', opacity: 0.5, fontSize: '0.6rem' }}>
+            {photo.image_url}
+          </small>
+        </div>
+      ) : (
         <video
           ref={videoRef}
           src={photo.image_url}
-          poster={photo.thumbnail_url || ''}
           muted={muted}
           loop
           playsInline
           preload="metadata"
-          style={{ width: '100%', display: 'block' }}
-          onError={handleVideoError}
+          onError={() => setLoadError(true)}
         />
-      ) : (
-        <div className="client-photo__video-error">
-          <AlertCircle size={24} />
-          <p>Video failed to load</p>
-          <button onClick={handleManualPlay} className="btn btn-sm btn-primary">Retry</button>
-        </div>
       )}
-      <button
-        className="client-photo__mute"
-        onClick={e => { e.stopPropagation(); setMuted(m => !m); }}
-        title={muted ? 'Unmute' : 'Mute'}
-      >
-        {muted ? <VolumeX size={13} /> : <Volume2 size={13} />}
-      </button>
+
+      {!loadError && (
+        <button
+          className="client-photo__mute"
+          onClick={e => { e.stopPropagation(); setMuted(m => !m); }}
+          title={muted ? 'Unmute' : 'Mute'}
+        >
+          {muted ? <VolumeX size={13} /> : <Volume2 size={13} />}
+        </button>
+      )}
+
       <div className="client-photo__overlay client-photo__overlay--video">
         <Play size={22} />
         {photo.caption && <span>{photo.caption}</span>}
       </div>
+
       <div className="client-photo__vid-badge">
         <Play size={9} fill="currentColor" /> Video
       </div>
@@ -155,6 +119,7 @@ function VideoCard({ photo, index, onClick }) {
   );
 }
 
+// ── Image card ───────────────────────────────────────────────
 function ImageCard({ photo, index, onClick }) {
   const [ref, visible] = useScrollReveal();
   return (
@@ -173,7 +138,8 @@ function ImageCard({ photo, index, onClick }) {
   );
 }
 
-function LightboxVideo({ src, poster }) {
+// ── Lightbox video ───────────────────────────────────────────
+function LightboxVideo({ src }) {
   const ref = useRef(null);
   useEffect(() => { ref.current?.play().catch(() => {}); }, [src]);
   return (
@@ -183,18 +149,18 @@ function LightboxVideo({ src, poster }) {
       controls
       autoPlay
       playsInline
-      poster={poster}
       style={{ maxHeight: '78vh', width: '100%', objectFit: 'contain', display: 'block' }}
     />
   );
 }
 
+// ── Main component ───────────────────────────────────────────
 export default function ClientGallery() {
-  const [code,     setCode]     = useState('');
-  const [gallery,  setGallery]  = useState(null);
-  const [photos,   setPhotos]   = useState([]);
-  const [error,    setError]    = useState('');
-  const [loading,  setLoading]  = useState(false);
+  const [code,     setCode]    = useState('');
+  const [gallery,  setGallery] = useState(null);
+  const [photos,   setPhotos]  = useState([]);
+  const [error,    setError]   = useState('');
+  const [loading,  setLoading] = useState(false);
   const [lightbox, setLightbox] = useState(null);
   const [lbIndex,  setLbIndex]  = useState(0);
 
@@ -203,14 +169,20 @@ export default function ClientGallery() {
     setError('');
     setLoading(true);
     const { data: gal, error: galErr } = await supabase
-      .from('client_galleries').select('*').eq('access_code', code.trim()).single();
+      .from('client_galleries')
+      .select('*')
+      .eq('access_code', code.trim())
+      .single();
     if (galErr || !gal) {
       setError('Invalid access code. Please check your code and try again, or contact Freddie Visuals.');
       setLoading(false);
       return;
     }
     const { data: pics } = await supabase
-      .from('client_photos').select('*').eq('gallery_id', gal.id).order('created_at');
+      .from('client_photos')
+      .select('*')
+      .eq('gallery_id', gal.id)
+      .order('created_at');
     setGallery(gal);
     setPhotos(pics || []);
     setLoading(false);
@@ -239,6 +211,7 @@ export default function ClientGallery() {
     return () => window.removeEventListener('keydown', onKey);
   }, [lightbox, lbIndex]);
 
+  // ── Gallery view ─────────────────────────────────────────
   if (gallery) {
     return (
       <main className="client-gallery-page">
@@ -248,11 +221,16 @@ export default function ClientGallery() {
             {gallery.event_name && <p className="client-gallery-event">{gallery.event_name}</p>}
             {gallery.event_date && (
               <p className="client-gallery-date">
-                {new Date(gallery.event_date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
+                {new Date(gallery.event_date).toLocaleDateString('en-US', {
+                  year: 'numeric', month: 'long', day: 'numeric',
+                })}
               </p>
             )}
           </div>
-          <button className="btn btn-outline client-gallery-exit" onClick={() => { setGallery(null); setPhotos([]); setCode(''); }}>
+          <button
+            className="btn btn-outline client-gallery-exit"
+            onClick={() => { setGallery(null); setPhotos([]); setCode(''); }}
+          >
             <LogOut size={14} /> Exit Gallery
           </button>
         </div>
@@ -276,11 +254,12 @@ export default function ClientGallery() {
           </div>
         )}
 
+        {/* Lightbox */}
         {lightbox && (
           <div className="lightbox" onClick={() => setLightbox(null)}>
             <div className="lightbox__inner" onClick={e => e.stopPropagation()}>
               {isVideoUrl(lightbox.image_url)
-                ? <LightboxVideo src={lightbox.image_url} poster={lightbox.thumbnail_url || ''} />
+                ? <LightboxVideo src={lightbox.image_url} />
                 : <img src={lightbox.image_url} alt={lightbox.caption || ''} />
               }
               <div className="lightbox__meta">
@@ -314,6 +293,7 @@ export default function ClientGallery() {
     );
   }
 
+  // ── Access page ───────────────────────────────────────────
   return (
     <main className="client-access-page">
       <div className="client-access-inner">
@@ -339,12 +319,20 @@ export default function ClientGallery() {
             />
           </div>
           {error && <p className="client-access-error">{error}</p>}
-          <button type="submit" className="btn btn-primary" disabled={loading} style={{ width: '100%', justifyContent: 'center', padding: '1rem' }}>
+          <button
+            type="submit"
+            className="btn btn-primary"
+            disabled={loading}
+            style={{ width: '100%', justifyContent: 'center', padding: '1rem' }}
+          >
             {loading ? 'Verifying…' : 'Access My Gallery'}
           </button>
         </form>
         <p className="client-access-help">
-          Don't have a code? <a href="mailto:hello@freddievisuals.com" style={{ color: 'var(--gold)' }}>hello@freddievisuals.com</a>
+          Don't have a code?{' '}
+          <a href="mailto:hello@freddievisuals.com" style={{ color: 'var(--gold)' }}>
+            hello@freddievisuals.com
+          </a>
         </p>
       </div>
     </main>

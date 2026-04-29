@@ -53,7 +53,7 @@ export default function Contact() {
               <div className="contact-detail__icon"><Mail size={16} /></div>
               <div>
                 <span className="contact-detail__label">Email</span>
-                <a href="mailto:hello@freddievisuals.com">hello@freddi2076@gmail.com</a>
+                <a href="mailto:hello@freddievisuals.com">hello@freddi2074@gmail.com</a>
               </div>
             </li>
             <li>

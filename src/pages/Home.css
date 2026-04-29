@@ -498,20 +498,3 @@
   border-radius: 50%;
   pointer-events: none;
 }
-
-/* ── Scroll reveal — slide in from right ───────────────────── */
-.reveal-item {
-  opacity: 0;
-  transform: translateX(60px);
-  transition: opacity 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94),
-              transform 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-}
-.reveal-item--visible {
-  opacity: 1;
-  transform: translateX(0);
-}
-
-/* Prevent reveal wrapper from breaking grid/flex children */
-.reveal-item.gallery-preview__item {
-  display: contents;
-}

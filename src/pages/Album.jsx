@@ -141,7 +141,7 @@ export default function Album() {
           </button>
         </form>
         <p className="album-gate__help">
-          Don't have a code? <a href="mailto:hello@freddievisuals.com">hello@freddievisuals.com</a>
+          Don't have a code? <a href="mailto:hello@freddievisuals.com">hello@freddie2074@gmail.com</a>
         </p>
       </div>
     </main>

@@ -134,14 +134,15 @@ export default function Album() {
             className="album-gate__input"
             required
           />
-          {error && <p className="album-gate__error">{error}</p>}
+          {error && <p className="aù
+                      lbum-gate__error">{error}</p>}
           <button type="submit" className="btn btn-primary" disabled={loading}
             style={{ width: '100%', justifyContent: 'center', padding: '1rem' }}>
             {loading ? 'Verifying…' : 'Open My Album'}
           </button>
         </form>
         <p className="album-gate__help">
-          Don't have a code? <a href="mailto:hello@freddievisuals.com">hello@freddie2074@gmail.com</a>
+          Don't have a code? <a href="mailto:hello@freddievisuals.com">@freddie2074@gmail.com</a>
         </p>
       </div>
     </main>

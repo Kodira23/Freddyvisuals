@@ -5,24 +5,6 @@ import './Gallery.css';
 
 const CATEGORIES = ['All', 'Wedding', 'Events', 'Portrait', 'Maternity', 'Videography'];
 
-const PLACEHOLDER_GALLERY = [
-  { id: 1, title: 'Golden Vows', category: 'Wedding', image_url: '_MG_2261.jpg' },
-  { id: 2, title: 'New Life', category: 'Maternity', image_url: 'https://images.unsplash.com/photo-1493894473891-10fc1e5dbd22?w=800&q=80' },
-  { id: 3, title: 'The Embrace', category: 'Portrait', image_url: 'https://images.unsplash.com/photo-1525182008055-f88b95ff7980?w=800&q=80' },
-  { id: 4, title: 'Gala Night', category: 'Events', image_url: 'https://images.unsplash.com/photo-1478145046317-39f10e56b5e9?w=800&q=80' },
-  { id: 5, title: 'Ceremony Arch', category: 'Wedding', image_url: 'https://images.unsplash.com/photo-1465495976277-4387d4b0b4c6?w=800&q=80' },
-  { id: 6, title: 'Urban Soul', category: 'Portrait', image_url: 'https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?w=800&q=80' },
-  { id: 7, title: 'First Dance', category: 'Wedding', image_url: 'https://images.unsplash.com/photo-1519225421980-715cb0215aed?w=800&q=80' },
-  { id: 8, title: 'Sacred Glow', category: 'Maternity', image_url: 'https://images.unsplash.com/photo-1555252333-9f8e92e65df9?w=800&q=80' },
-  { id: 9, title: 'Product Launch', category: 'Events', image_url: 'https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=800&q=80' },
-  { id: 10, title: 'Behind the Lens', category: 'Videography', image_url: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=800&q=80' },
-  { id: 11, title: 'Bridal Prep', category: 'Wedding', image_url: 'https://images.unsplash.com/photo-1550005809-91ad75fb315f?w=800&q=80' },
-  { id: 12, title: 'Fine Art', category: 'Portrait', image_url: 'https://images.unsplash.com/photo-1551884831-bbf3cdc6469e?w=800&q=80' },
-  { id: 13, title: 'Moment of Bliss', category: 'Maternity', image_url: 'https://images.unsplash.com/photo-1516627145497-ae6968895b74?w=800&q=80' },
-  { id: 14, title: 'Conference', category: 'Events', image_url: 'https://images.unsplash.com/photo-1505373877841-8d25f7d46678?w=800&q=80' },
-  { id: 15, title: 'Cinematic Cut', category: 'Videography', image_url: 'https://images.unsplash.com/photo-1574717024653-61fd2cf4d44d?w=800&q=80' },
-];
-
 // ── Detect if a gallery row is a video ───────────────────────
 function isVideoItem(item) {
   if (!item?.image_url) return false;
@@ -32,39 +14,10 @@ function isVideoItem(item) {
   return false;
 }
 
-// ── Scroll reveal hook — slides in from right ────────────────
-function useScrollReveal(delay = 0) {
-  const ref = useRef(null);
-  const [visible, setVisible] = useState(false);
-
-  useEffect(() => {
-    const el = ref.current;
-    if (!el) return;
-    const obs = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
-          setTimeout(() => setVisible(true), delay);
-          obs.disconnect();
-        }
-      },
-      { threshold: 0.05, rootMargin: '0px 0px -20px 0px' }
-    );
-    obs.observe(el);
-    return () => obs.disconnect();
-  }, [delay]);
-
-  return [ref, visible];
-}
-
 // ── Image card ───────────────────────────────────────────────
-function ImageGalleryCard({ item, index, onClick }) {
-  const [ref, visible] = useScrollReveal((index % 3) * 60);
+function ImageGalleryCard({ item, onClick }) {
   return (
-    <div
-      ref={ref}
-      className={`gallery-card gallery-card--reveal${visible ? ' gallery-card--visible' : ''}`}
-      onClick={() => onClick(item)}
-    >
+    <div className="gallery-card" onClick={() => onClick(item)}>
       <img src={item.image_url} alt={item.title} loading="lazy" />
       <div className="gallery-card__info">
         <ZoomIn size={18} className="gallery-card__zoom" />
@@ -78,8 +31,7 @@ function ImageGalleryCard({ item, index, onClick }) {
 }
 
 // ── Video card ───────────────────────────────────────────────
-function VideoGalleryCard({ item, index, onClick }) {
-  const [ref, visible] = useScrollReveal((index % 3) * 60);
+function VideoGalleryCard({ item, onClick }) {
   const videoRef = useRef(null);
   const [muted, setMuted] = useState(true);
 
@@ -99,8 +51,7 @@ function VideoGalleryCard({ item, index, onClick }) {
 
   return (
     <div
-      ref={ref}
-      className={`gallery-card gallery-card--video gallery-card--reveal${visible ? ' gallery-card--visible' : ''}`}
+      className="gallery-card gallery-card--video"
       onClick={() => onClick(item)}
     >
       <video
@@ -151,13 +102,20 @@ function LightboxVideo({ src }) {
 
 // ── Main Gallery component ────────────────────────────────────
 export default function Gallery() {
-  const [images,   setImages]   = useState(PLACEHOLDER_GALLERY);
+  const [images,   setImages]   = useState([]);
+  const [loading,  setLoading]  = useState(true);
   const [active,   setActive]   = useState('All');
   const [lightbox, setLightbox] = useState(null);
 
   useEffect(() => {
-    supabase.from('gallery').select('*').order('created_at', { ascending: false })
-      .then(({ data }) => { if (data?.length) setImages(data); });
+    supabase
+      .from('gallery')
+      .select('*')
+      .order('created_at', { ascending: false })
+      .then(({ data }) => {
+        if (data?.length) setImages(data);
+        setLoading(false);
+      });
   }, []);
 
   const filtered = active === 'All' ? images : images.filter(i => i.category === active);
@@ -189,11 +147,17 @@ export default function Gallery() {
       </div>
 
       <div className="gallery-grid container">
-        {filtered.map((item, index) =>
-          isVideoItem(item) ? (
-            <VideoGalleryCard key={item.id} item={item} index={index} onClick={setLightbox} />
-          ) : (
-            <ImageGalleryCard key={item.id} item={item} index={index} onClick={setLightbox} />
+        {loading ? (
+          <p style={{ color: 'var(--mid)', fontSize: '0.85rem', letterSpacing: '0.1em' }}>Loading...</p>
+        ) : filtered.length === 0 ? (
+          <p style={{ color: 'var(--mid)', fontSize: '0.85rem', letterSpacing: '0.1em' }}>No images found.</p>
+        ) : (
+          filtered.map(item =>
+            isVideoItem(item) ? (
+              <VideoGalleryCard key={item.id} item={item} onClick={setLightbox} />
+            ) : (
+              <ImageGalleryCard key={item.id} item={item} onClick={setLightbox} />
+            )
           )
         )}
       </div>

@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { supabase } from '../lib/supabase';
+import imageCompression from 'browser-image-compression';
 import {
   Lock, LogOut, LayoutDashboard, Image, Briefcase,
   BookOpen, Mail, Plus, Trash2, Edit3, Save, X, Check,
@@ -18,10 +19,30 @@ const GALLERY_CATS    = ['Wedding','Events','Portrait','Maternity','Videography'
 const SERVICE_TITLES  = ['Wedding Photography','Events Coverage','Portrait Sessions','Maternity Photography','Videography','Commercial & Brand'];
 
 // ── File type helpers ─────────────────────────────────────────────────
+async function compressIfImage(file) {
+  // Only compress images — never touch videos
+  if (!file.type.startsWith('image/')) return file;
+
+  try {
+    const compressed = await imageCompression(file, {
+      maxSizeMB: 0.6,           // target max ~600KB
+      maxWidthOrHeight: 1600,   // resize down if larger than this
+      useWebWorker: true,
+      initialQuality: 0.8,
+    });
+    // Keep original filename, just swap the bytes
+    return new File([compressed], file.name, { type: compressed.type });
+  } catch (err) {
+    console.warn('Compression failed, uploading original:', err);
+    return file; // fall back to original if compression fails for any reason
+  }
+}
+
 async function uploadFile(bucket, file) {
-  const ext  = file.name.split('.').pop();
+  const fileToUpload = await compressIfImage(file);
+  const ext  = fileToUpload.name.split('.').pop();
   const path = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
-  const { error } = await supabase.storage.from(bucket).upload(path, file, { cacheControl: '3600', upsert: false });
+  const { error } = await supabase.storage.from(bucket).upload(path, fileToUpload, { cacheControl: '3600', upsert: false });
   if (error) throw error;
   const { data } = supabase.storage.from(bucket).getPublicUrl(path);
   if (!data?.publicUrl) throw new Error('Could not get public URL — is the bucket set to Public?');
@@ -150,7 +171,7 @@ function MediaPreview({ src, alt, file, className, onError }) {
       />
     );
   }
-  return <img src={src} alt={alt} className={className} onError={onError} />;
+  return <img src={src} alt={alt} className={className} loading="lazy" onError={onError} />;
 }
 
 // ── Pre-upload confirm panel ──────────────────────────────────────────
@@ -587,6 +608,7 @@ function GalleryTab() {
                   <img
                     src={row.image_url}
                     alt={row.title}
+                    loading="lazy"
                     onError={e => {
                       e.target.style.opacity = '0.2';
                       e.target.title = 'Failed to load — check bucket is Public in Supabase';
@@ -847,7 +869,7 @@ function AlbumsTab() {
                   <div className="adm-client-photos-grid">
                     {(photos[row.id] || []).map(p => (
                       <div key={p.id} className="adm-client-photo">
-                        <img src={p.image_url} alt="" onError={e => { e.target.style.opacity = '0.2'; }} />
+                        <img src={p.image_url} alt="" loading="lazy" onError={e => { e.target.style.opacity = '0.2'; }} />
                         {deletePhotoInfo?.pid === p.id ? (
                           <div className="adm-client-photo__inline-del">
                             <InlineConfirm
@@ -1014,7 +1036,7 @@ function ServicesTab() {
                         style={{ width: '100%', maxHeight: '200px', objectFit: 'cover', borderRadius: '6px' }}
                       />
                     ) : (
-                      <img src={imgPrev || form.image_url} alt="cover" />
+                      <img src={imgPrev || form.image_url} alt="cover" loading="lazy" />
                     )}
                     <button type="button" onClick={() => { setImgFile(null); setImgPrev(''); setForm(f => ({ ...f, image_url: '' })); }}><X size={13} /></button>
                   </div>
@@ -1067,6 +1089,7 @@ function ServicesTab() {
                       src={row.image_url}
                       alt={row.title}
                       className="adm-service-card__img"
+                      loading="lazy"
                       onError={e => { e.target.style.opacity = '0.2'; }}
                     />
                   )

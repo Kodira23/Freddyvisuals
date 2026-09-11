@@ -18,7 +18,7 @@ function isVideoItem(item) {
 function ImageGalleryCard({ item, onClick }) {
   return (
     <div className="gallery-card" onClick={() => onClick(item)}>
-      <img src={item.image_url} alt={item.title} loading="lazy" />
+      <img src={item.image_url} alt={item.title} loading="lazy" decoding="async" />
       <div className="gallery-card__info">
         <ZoomIn size={18} className="gallery-card__zoom" />
         <div>
@@ -168,7 +168,7 @@ export default function Gallery() {
           <div className="lightbox__inner" onClick={e => e.stopPropagation()}>
             {isVideoItem(lightbox)
               ? <LightboxVideo src={lightbox.image_url} />
-              : <img src={lightbox.image_url} alt={lightbox.title} />
+              : <img src={lightbox.image_url} alt={lightbox.title} decoding="async" />
             }
             <div className="lightbox__meta">
               <span className="lightbox__cat">{lightbox.category}</span>

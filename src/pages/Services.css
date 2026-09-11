@@ -37,8 +37,9 @@
 .service-detail__image img { height: 550px; object-fit: cover; }
 .service-detail__price-badge {
   position: absolute;
-  top: 2rem;
+  bottom: 2rem;
   right: -1rem;
+  top: auto;
   background: var(--black);
   border: 1px solid var(--gold);
   padding: 1rem 1.5rem;

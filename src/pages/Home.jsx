@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { Award, Camera, Users, Star, Film, Heart, Baby } from 'lucide-react';
 import { supabase } from '../lib/supabase';
@@ -7,6 +7,39 @@ import './Home.css';
 // Helper to detect video URLs
 function isVideoUrl(url) {
   return /\.(mp4|mov|avi|webm|mkv|m4v|wmv|flv|3gp)(\?.*)?$/i.test(url || '');
+}
+
+// ── Lazy video: only loads + plays once scrolled into view ─────────────
+function LazyVideo({ src, className, style, poster }) {
+  const ref = useRef(null);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const obs = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) el.play().catch(() => {});
+        else el.pause();
+      },
+      { threshold: 0.3 }
+    );
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, []);
+
+  return (
+    <video
+      ref={ref}
+      src={src}
+      muted
+      loop
+      playsInline
+      preload="metadata"
+      poster={poster}
+      className={className}
+      style={style}
+    />
+  );
 }
 
 const GALLERY_PLACEHOLDERS = [
@@ -84,7 +117,7 @@ export default function Home() {
       <section className="hero">
         <div className="hero__photo-wrap">
           <div className="hero__bg hero__bg--active">
-            <img src="mas.jpg" alt="Freddie Visuals" />
+            <img src="mas.jpg" alt="Freddie Visuals" fetchPriority="high" decoding="async" />
           </div>
         </div>
         <div className="hero__card">
@@ -114,7 +147,7 @@ export default function Home() {
       {/* ── About ── */}
       <section className="about container">
         <div className="about__image-wrap">
-          <img src="logos.png" alt="Freddie at work" className="about__image" />
+          <img src="logos.png" alt="Freddie at work" className="about__image" loading="lazy" decoding="async" />
           <div className="about__badge">
             <span className="about__badge-num">6+</span>
             <span className="about__badge-text">Years of<br />Artistry</span>
@@ -152,9 +185,9 @@ export default function Home() {
             <div key={title} className="niche-card">
               <div className="niche-card__image">
                 {video
-                  ? <video src={video} autoPlay muted loop playsInline poster="/placeholder-video.jpg" />
+                  ? <LazyVideo src={video} poster="/placeholder-video.jpg" />
                   : image
-                    ? <img src={image} alt={title} />
+                    ? <img src={image} alt={title} loading="lazy" decoding="async" />
                     : <div className="niche-card__image-placeholder"><Icon size={28} /></div>
                 }
               </div>
@@ -181,9 +214,9 @@ export default function Home() {
           {gallery.map((item, i) => (
             <div key={item.id} className={`gallery-preview__item gallery-preview__item--${i}`}>
               {isVideoUrl(item.image_url) ? (
-                <video src={item.image_url} muted autoPlay loop playsInline className="gallery-preview__video" />
+                <LazyVideo src={item.image_url} className="gallery-preview__video" />
               ) : (
-                <img src={item.image_url} alt={item.title} />
+                <img src={item.image_url} alt={item.title} loading="lazy" decoding="async" />
               )}
               <div className="gallery-preview__overlay">
                 <span className="gallery-preview__cat">{item.category}</span>
@@ -208,6 +241,8 @@ export default function Home() {
                 alt="Wedding"
                 className="testimonial__avatar"
                 style={{ objectFit: 'cover' }}
+                loading="lazy"
+                decoding="async"
               />
             ) : (
               <div className="testimonial__avatar" />
